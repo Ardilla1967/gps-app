@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Localizador GPS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+    button { padding: 15px 30px; margin: 10px; font-size: 16px; }
+    #status { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <h1>🌍 Localizador GPS</h1>
+  <button onclick="guardarUbicacion()">📍 Guardar Ubicación</button>
+  <button onclick="abrirMapa()">🗺️ Ver en Mapas</button>
+  <div id="status">Esperando acción...</div>
+
+  <script>
+    function guardarUbicacion() {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          const lat = position.coords.latitude.toFixed(6);
+          const lon = position.coords.longitude.toFixed(6);
+          localStorage.setItem("lat", lat);
+          localStorage.setItem("lon", lon);
+          document.getElementById("status").innerText = `Ubicación guardada: ${lat}, ${lon}`;
+        }, function(error) {
+          document.getElementById("status").innerText = "Error al obtener ubicación.";
+        }, {
+          enableHighAccuracy: true
+        });
+      } else {
+        document.getElementById("status").innerText = "GPS no soportado.";
+      }
+    }
+
+    function abrirMapa() {
+      const lat = localStorage.getItem("lat");
+      const lon = localStorage.getItem("lon");
+      if (lat && lon) {
+        const url = `https://maps.google.com/?q=${lat},${lon}`;
+        window.open(url, "_blank");
+      } else {
+        document.getElementById("status").innerText = "No hay coordenadas guardadas.";
+      }
+    }
+  </script>
+
+</body>
+</html>
