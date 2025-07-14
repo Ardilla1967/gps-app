@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Localizador GPS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 40px; }
+    button { padding: 15px 30px; margin: 10px; font-size: 16px; }
+    #status { margin-top: 20px; font-weight: bold; white-space: pre-line; }
+    #historial { margin-top: 20px; text-align: left; max-width: 90%; margin-left: auto; margin-right: auto; }
+    select { font-size: 16px; padding: 5px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+  <h1>🌍 Localizador GPS</h1>
+  <button onclick="guardarUbicacion()">📍 Guardar Ubicación</button>
+  <button onclick="abrirMapaSeleccionado()">🗺️ Ver Seleccionada</button>
+  <button onclick="exportarUbicaciones()">⬇️ Exportar</button>
+
+  <div id="status">Esperando acción...</div>
+
+  <div id="historial">
+    <label for="lista">📌 Ubicaciones guardadas:</label>
+    <select id="lista" size="5" style="width: 100%;"></select>
+  </div>
+
+  <script>
+    const status = document.getElementById("status");
+    const lista = document.getElementById("lista");
+
+    function guardarUbicacion() {
+      if (!navigator.geolocation) {
+        status.innerText = "⚠️ Tu navegador no soporta geolocalización.";
+        return;
+      }
+
+      status.innerText = "📡 Obteniendo ubicación...";
+
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          const lat = position.coords.latitude.toFixed(6);
+          const lon = position.coords.longitude.toFixed(6);
+          const fecha = new Date().toLocaleString();
+          const entrada = `${fecha} | ${lat}, ${lon}`;
+
+          let ubicaciones = JSON.parse(localStorage.getItem("ubicaciones")) || [];
+          ubicaciones.push({ lat, lon, fecha });
+          localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
+
+          status.innerText = `✅ Ubicación guardada:\n${lat}, ${lon}\n🕒 ${fecha}`;
+          actualizarLista();
+        },
+        function(error) {
+          let mensaje = "❌ Error al obtener ubicación.\n";
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              mensaje += "⛔ Permiso denegado. Ve a Ajustes > Safari > Ubicación."; break;
+            case error.POSITION_UNAVAILABLE:
+              mensaje += "📡 Posición no disponible."; break;
+            case error.TIMEOUT:
+              mensaje += "⏱️ Tiempo de espera excedido."; break;
+            default:
+              mensaje += "❓ Error desconocido."; break;
+          }
+          status.innerText = mensaje;
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    }
+
+    function actualizarLista() {
+      lista.innerHTML = "";
+      let ubicaciones = JSON.parse(localStorage.getItem("ubicaciones")) || [];
+      ubicaciones.forEach((item, index) => {
+        const option = document.createElement("option");
+        option.value = index;
+        option.text = `${item.fecha} - ${item.lat}, ${item.lon}`;
+        lista.appendChild(option);
+      });
+    }
+
+    function abrirMapaSeleccionado() {
+      const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones")) || [];
+      const seleccion = lista.selectedIndex;
+      if (seleccion >= 0 && ubicaciones[seleccion]) {
+        const { lat, lon } = ubicaciones[seleccion];
+        const url = `https://maps.google.com/?q=${lat},${lon}`;
+        window.open(url, "_blank");
+      } else {
+        status.innerText = "⚠️ Selecciona una ubicación de la lista.";
+      }
+    }
+
+    function exportarUbicaciones() {
+      const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones")) || [];
+      if (ubicaciones.length === 0) {
+        status.innerText = "⚠️ No hay ubicaciones para exportar.";
+        return;
+      }
+      let texto = "Fecha y Hora,Latitud,Longitud\n";
+      ubicaciones.forEach(u => {
+        texto += `${u.fecha},${u.lat},${u.lon}\n`;
+      });
+      const blob = new Blob([texto], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "ubicaciones.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      status.innerText = "✅ Archivo exportado.";
+    }
+
+    // Inicializar lista al cargar
+    actualizarLista();
+  </script>
+</body>
+</html>
