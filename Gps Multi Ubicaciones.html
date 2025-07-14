@@ -20,6 +20,7 @@
   <button onclick="abrirMapaSeleccionado()">🗺️ Ver Seleccionada</button>
   <button onclick="exportarUbicaciones()">⬇️ Exportar</button>
   <button onclick="borrarUbicacionSeleccionada()">🗑️ Borrar Seleccionada</button>
+  <button onclick="borrarTodasUbicaciones()">🧹 Borrar Todo</button>
 
   <div id="status">Esperando acción...</div>
 
@@ -132,6 +133,17 @@
         status.innerText = "🗑️ Ubicación eliminada.";
       } else {
         status.innerText = "⚠️ Selecciona una ubicación para borrar.";
+      }
+    }
+
+    function borrarTodasUbicaciones() {
+      const confirmacion = confirm("¿Estás seguro que deseas eliminar todas las ubicaciones guardadas?");
+      if (confirmacion) {
+        localStorage.removeItem("ubicaciones");
+        actualizarLista();
+        status.innerText = "🧹 Todas las ubicaciones fueron eliminadas.";
+      } else {
+        status.innerText = "❎ Operación cancelada.";
       }
     }
 
