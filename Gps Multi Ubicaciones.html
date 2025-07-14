@@ -9,12 +9,13 @@
     button { padding: 15px 30px; margin: 10px; font-size: 16px; }
     #status { margin-top: 20px; font-weight: bold; white-space: pre-line; }
     #historial { margin-top: 20px; text-align: left; max-width: 90%; margin-left: auto; margin-right: auto; }
-    select { font-size: 16px; padding: 5px; margin-top: 10px; }
+    select, input[type="text"] { font-size: 16px; padding: 5px; margin-top: 10px; width: 100%; box-sizing: border-box; }
   </style>
 </head>
 <body>
 
   <h1>🌍 Localizador GPS</h1>
+  <input type="text" id="nombre" placeholder="🔤 Nombre de la ubicación (opcional)">
   <button onclick="guardarUbicacion()">📍 Guardar Ubicación</button>
   <button onclick="abrirMapaSeleccionado()">🗺️ Ver Seleccionada</button>
   <button onclick="exportarUbicaciones()">⬇️ Exportar</button>
@@ -23,12 +24,13 @@
 
   <div id="historial">
     <label for="lista">📌 Ubicaciones guardadas:</label>
-    <select id="lista" size="5" style="width: 100%;"></select>
+    <select id="lista" size="5"></select>
   </div>
 
   <script>
     const status = document.getElementById("status");
     const lista = document.getElementById("lista");
+    const inputNombre = document.getElementById("nombre");
 
     function guardarUbicacion() {
       if (!navigator.geolocation) {
@@ -43,13 +45,14 @@
           const lat = position.coords.latitude.toFixed(6);
           const lon = position.coords.longitude.toFixed(6);
           const fecha = new Date().toLocaleString();
-          const entrada = `${fecha} | ${lat}, ${lon}`;
+          const nombre = inputNombre.value.trim() || "(sin nombre)";
 
           let ubicaciones = JSON.parse(localStorage.getItem("ubicaciones")) || [];
-          ubicaciones.push({ lat, lon, fecha });
+          ubicaciones.push({ lat, lon, fecha, nombre });
           localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
 
-          status.innerText = `✅ Ubicación guardada:\n${lat}, ${lon}\n🕒 ${fecha}`;
+          status.innerText = `✅ Ubicación guardada:\n${nombre}\n${lat}, ${lon}\n🕒 ${fecha}`;
+          inputNombre.value = "";
           actualizarLista();
         },
         function(error) {
@@ -80,7 +83,7 @@
       ubicaciones.forEach((item, index) => {
         const option = document.createElement("option");
         option.value = index;
-        option.text = `${item.fecha} - ${item.lat}, ${item.lon}`;
+        option.text = `${item.nombre} | ${item.fecha} - ${item.lat}, ${item.lon}`;
         lista.appendChild(option);
       });
     }
@@ -103,9 +106,9 @@
         status.innerText = "⚠️ No hay ubicaciones para exportar.";
         return;
       }
-      let texto = "Fecha y Hora,Latitud,Longitud\n";
+      let texto = "Nombre,Fecha y Hora,Latitud,Longitud\n";
       ubicaciones.forEach(u => {
-        texto += `${u.fecha},${u.lat},${u.lon}\n`;
+        texto += `${u.nombre},${u.fecha},${u.lat},${u.lon}\n`;
       });
       const blob = new Blob([texto], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
