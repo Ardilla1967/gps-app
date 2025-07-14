@@ -19,6 +19,7 @@
   <button onclick="guardarUbicacion()">📍 Guardar Ubicación</button>
   <button onclick="abrirMapaSeleccionado()">🗺️ Ver Seleccionada</button>
   <button onclick="exportarUbicaciones()">⬇️ Exportar</button>
+  <button onclick="borrarUbicacionSeleccionada()">🗑️ Borrar Seleccionada</button>
 
   <div id="status">Esperando acción...</div>
 
@@ -119,6 +120,19 @@
       a.click();
       document.body.removeChild(a);
       status.innerText = "✅ Archivo exportado.";
+    }
+
+    function borrarUbicacionSeleccionada() {
+      let ubicaciones = JSON.parse(localStorage.getItem("ubicaciones")) || [];
+      const seleccion = lista.selectedIndex;
+      if (seleccion >= 0) {
+        ubicaciones.splice(seleccion, 1);
+        localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
+        actualizarLista();
+        status.innerText = "🗑️ Ubicación eliminada.";
+      } else {
+        status.innerText = "⚠️ Selecciona una ubicación para borrar.";
+      }
     }
 
     // Inicializar lista al cargar
