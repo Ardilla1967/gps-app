@@ -222,13 +222,41 @@
         csv_header: "Name,Date and Time,Latitude,Longitude\n"
       }
     };
-    // Guardar idioma preferido en localStorage
-    let lang = localStorage.getItem("lang") || "es";
+
+    // Detección de idioma por URL, localStorage o navegador
+    function getParamLang() {
+      const urlParams = new URLSearchParams(window.location.search);
+      let param = urlParams.get('lang');
+      if (param && (param === 'es' || param === 'en')) {
+        return param;
+      }
+      return null;
+    }
+    function getInitialLang() {
+      // 1. URL param
+      let urlLang = getParamLang();
+      if (urlLang) return urlLang;
+      // 2. localStorage
+      let stored = localStorage.getItem("lang");
+      if (stored && (stored === 'es' || stored === 'en')) return stored;
+      // 3. Navegador
+      let navLang = navigator.language.slice(0,2);
+      return (navLang === 'en') ? 'en' : 'es';
+    }
+
+    let lang = getInitialLang();
+
+    function updateUrlLang(newLang) {
+      const url = new URL(window.location);
+      url.searchParams.set('lang', newLang);
+      window.history.replaceState({}, '', url);
+    }
+
     function cambiarIdioma(nuevo) {
       lang = nuevo;
       localStorage.setItem("lang", lang);
+      updateUrlLang(lang);
 
-      // Cambia textos
       document.getElementById("titulo").innerText = texts[lang].titulo;
       document.getElementById("nombre").placeholder = texts[lang].placeholder;
       document.getElementById("btn-guardar").innerText = texts[lang].btn_guardar;
@@ -378,6 +406,7 @@
         status.style.color = "#374151";
       }
     }
+
     // Inicializar
     cambiarIdioma(lang);
   </script>
