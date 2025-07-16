@@ -7,7 +7,7 @@
   <style>
     :root {
       --primary: #2563eb;
-      --secondary: #e0e7ef;
+      --primary-hover: #1d4ed8;
       --bg: #f3f6fb;
       --danger: #dc2626;
       --success: #16a34a;
@@ -21,9 +21,46 @@
       min-height: 100vh;
       display: flex; flex-direction: column; align-items: center;
     }
+    .lang-bar {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      padding: 14px 0 10px 0;
+      position: relative;
+      z-index: 10;
+      margin-bottom: 24px;
+      border-radius: 0 0 18px 18px;
+    }
+    .lang-bar button {
+      font-size: 1.07em;
+      padding: 7px 30px;
+      border-radius: 50px;
+      font-weight: 500;
+      border: 2px solid var(--primary);
+      background: transparent;
+      color: var(--primary);
+      transition: background .15s, color .15s, box-shadow .15s;
+      cursor: pointer;
+      outline: none;
+    }
+    .lang-bar button.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 3px 16px rgba(37,99,235,0.11);
+      border-color: var(--primary);
+      font-weight: bold;
+    }
+    .lang-bar button:not(.active):hover {
+      background: #eff6ff;
+      color: var(--primary-hover);
+      border-color: var(--primary-hover);
+    }
     .container {
       background: #fff;
-      margin: 32px 0;
+      margin: 0 0 36px 0;
       padding: 28px 18px 24px 18px;
       border-radius: var(--radius);
       box-shadow: var(--shadow);
@@ -36,33 +73,13 @@
       from { opacity: 0; transform: translateY(30px);}
       to { opacity: 1; transform: translateY(0);}
     }
-    .lang-switch {
-      position: absolute;
-      right: 24px; top: 20px;
-      z-index: 2;
-      font-size: 1.02em;
-    }
-    .lang-switch button {
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 50px;
-      padding: 6px 20px;
-      cursor: pointer;
-      font-size: 1em;
-      font-weight: 500;
-      margin-left: 8px;
-      transition: background 0.18s;
-    }
-    .lang-switch button.active,
-    .lang-switch button:hover {
-      background: #1d4ed8;
-    }
     h1 {
       font-size: 1.8em;
       color: var(--primary);
       margin-bottom: 18px;
       letter-spacing: .5px;
+      margin-top: 0;
+      text-align: center;
     }
     input[type="text"] {
       width: 100%;
@@ -95,10 +112,10 @@
       transition: background 0.15s, box-shadow 0.2s, transform 0.08s;
       margin: 0 0 0 0;
     }
-    button:hover, button:focus { background: #1d4ed8; box-shadow: 0 4px 14px rgba(37,99,235,0.13); transform: translateY(-1px) scale(1.02);}
+    button:hover, button:focus { background: var(--primary-hover); box-shadow: 0 4px 14px rgba(37,99,235,0.13); transform: translateY(-1px) scale(1.02);}
     button.danger { background: var(--danger);}
     button.danger:hover { background: #b91c1c;}
-    button.secondary { background: var(--secondary); color: var(--primary);}
+    button.secondary { background: #f1f5f9; color: var(--primary);}
     button.secondary:hover { background: #dbeafe;}
     #status {
       background: #f5faff;
@@ -137,12 +154,12 @@
       .container { max-width: 99vw; margin: 0; padding: 10px 2vw 20px 2vw;}
       h1 { font-size: 1.3em;}
       button, input, select { font-size: 0.98em; }
-      .lang-switch { right: 8px; top: 8px;}
+      .lang-bar { border-radius: 0 0 12px 12px; }
     }
   </style>
 </head>
 <body>
-  <div class="lang-switch" id="lang-switch">
+  <div class="lang-bar" id="lang-switch">
     <button id="btn-es"></button>
     <button id="btn-en"></button>
   </div>
