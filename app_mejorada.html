@@ -36,6 +36,28 @@
       from { opacity: 0; transform: translateY(30px);}
       to { opacity: 1; transform: translateY(0);}
     }
+    .lang-switch {
+      position: absolute;
+      right: 24px; top: 20px;
+      z-index: 2;
+      font-size: 1.02em;
+    }
+    .lang-switch button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 6px 20px;
+      cursor: pointer;
+      font-size: 1em;
+      font-weight: 500;
+      margin-left: 8px;
+      transition: background 0.18s;
+    }
+    .lang-switch button.active,
+    .lang-switch button:hover {
+      background: #1d4ed8;
+    }
     h1 {
       font-size: 1.8em;
       color: var(--primary);
@@ -115,71 +137,153 @@
       .container { max-width: 99vw; margin: 0; padding: 10px 2vw 20px 2vw;}
       h1 { font-size: 1.3em;}
       button, input, select { font-size: 0.98em; }
+      .lang-switch { right: 8px; top: 8px;}
     }
   </style>
 </head>
 <body>
+  <div class="lang-switch" id="lang-switch">
+    <button id="btn-es">ES</button>
+    <button id="btn-en">EN</button>
+  </div>
   <div class="container">
-    <h1>🌍 Localizador GPS</h1>
+    <h1 id="titulo">🌍 Localizador GPS</h1>
     <input type="text" id="nombre" placeholder="🔤 Nombre de la ubicación (opcional)">
     <div class="buttons">
-      <button onclick="guardarUbicacion()">📍 Guardar Ubicación</button>
-      <button class="secondary" onclick="abrirMapaSeleccionado()">🗺️ Ver Seleccionada</button>
-      <button class="secondary" onclick="exportarUbicaciones()">⬇️ Exportar a CSV</button>
-      <button class="danger" onclick="borrarUbicacionSeleccionada()">🗑️ Borrar Seleccionada</button>
-      <button class="danger" onclick="borrarTodasUbicaciones()">🧹 Borrar Todo</button>
+      <button id="btn-guardar" onclick="guardarUbicacion()">📍 Guardar Ubicación</button>
+      <button id="btn-ver" class="secondary" onclick="abrirMapaSeleccionado()">🗺️ Ver Seleccionada</button>
+      <button id="btn-exportar" class="secondary" onclick="exportarUbicaciones()">⬇️ Exportar a CSV</button>
+      <button id="btn-borrar" class="danger" onclick="borrarUbicacionSeleccionada()">🗑️ Borrar Seleccionada</button>
+      <button id="btn-borrar-todo" class="danger" onclick="borrarTodasUbicaciones()">🧹 Borrar Todo</button>
     </div>
     <div id="status">Esperando acción...</div>
     <div id="historial">
-      <label for="lista">📌 Ubicaciones guardadas:</label>
+      <label id="lbl-historial" for="lista">📌 Ubicaciones guardadas:</label>
       <select id="lista" size="5"></select>
     </div>
   </div>
   <script>
+    // Traducciones
+    const texts = {
+      es: {
+        titulo: "🌍 Localizador GPS",
+        placeholder: "🔤 Nombre de la ubicación (opcional)",
+        btn_guardar: "📍 Guardar Ubicación",
+        btn_ver: "🗺️ Ver Seleccionada",
+        btn_exportar: "⬇️ Exportar a CSV",
+        btn_borrar: "🗑️ Borrar Seleccionada",
+        btn_borrar_todo: "🧹 Borrar Todo",
+        esperando: "Esperando acción...",
+        historial: "📌 Ubicaciones guardadas:",
+        exportado: "✅ Archivo exportado.",
+        error_no_ubicaciones: "⚠️ No hay ubicaciones para exportar.",
+        error_selecciona_ubicacion: "⚠️ Selecciona una ubicación de la lista.",
+        error_no_geoloc: "⚠️ Tu navegador no soporta geolocalización.",
+        obteniendo: "📡 Obteniendo ubicación...",
+        guardada: nombre => `✅ Ubicación guardada:\n${nombre.nombre}\n${nombre.lat}, ${nombre.lon}\n🕒 ${nombre.fecha}`,
+        error_obteniendo: "❌ Error al obtener ubicación.\n",
+        permiso_denegado: "⛔ Permiso denegado. Ve a Ajustes > Safari > Ubicación.",
+        pos_no_disp: "📡 Posición no disponible.",
+        timeout: "⏱️ Tiempo de espera excedido.",
+        error_desconocido: "❓ Error desconocido.",
+        eliminada: "🗑️ Ubicación eliminada.",
+        error_selecciona_borrar: "⚠️ Selecciona una ubicación para borrar.",
+        todas_eliminadas: "🧹 Todas las ubicaciones fueron eliminadas.",
+        cancelada: "❎ Operación cancelada.",
+        confirm_borrar_todo: "¿Estás seguro que deseas eliminar todas las ubicaciones guardadas?",
+        csv_header: "Nombre,Fecha y Hora,Latitud,Longitud\n"
+      },
+      en: {
+        titulo: "🌍 GPS Locator",
+        placeholder: "🔤 Location name (optional)",
+        btn_guardar: "📍 Save Location",
+        btn_ver: "🗺️ Show Selected",
+        btn_exportar: "⬇️ Export to CSV",
+        btn_borrar: "🗑️ Delete Selected",
+        btn_borrar_todo: "🧹 Delete All",
+        esperando: "Waiting for action...",
+        historial: "📌 Saved locations:",
+        exportado: "✅ File exported.",
+        error_no_ubicaciones: "⚠️ No locations to export.",
+        error_selecciona_ubicacion: "⚠️ Select a location from the list.",
+        error_no_geoloc: "⚠️ Your browser does not support geolocation.",
+        obteniendo: "📡 Getting location...",
+        guardada: nombre => `✅ Location saved:\n${nombre.nombre}\n${nombre.lat}, ${nombre.lon}\n🕒 ${nombre.fecha}`,
+        error_obteniendo: "❌ Error getting location.\n",
+        permiso_denegado: "⛔ Permission denied. Go to Settings > Safari > Location.",
+        pos_no_disp: "📡 Position unavailable.",
+        timeout: "⏱️ Timeout.",
+        error_desconocido: "❓ Unknown error.",
+        eliminada: "🗑️ Location deleted.",
+        error_selecciona_borrar: "⚠️ Select a location to delete.",
+        todas_eliminadas: "🧹 All locations have been deleted.",
+        cancelada: "❎ Operation canceled.",
+        confirm_borrar_todo: "Are you sure you want to delete all saved locations?",
+        csv_header: "Name,Date and Time,Latitude,Longitude\n"
+      }
+    };
+    // Guardar idioma preferido en localStorage
+    let lang = localStorage.getItem("lang") || "es";
+    function cambiarIdioma(nuevo) {
+      lang = nuevo;
+      localStorage.setItem("lang", lang);
+
+      // Cambia textos
+      document.getElementById("titulo").innerText = texts[lang].titulo;
+      document.getElementById("nombre").placeholder = texts[lang].placeholder;
+      document.getElementById("btn-guardar").innerText = texts[lang].btn_guardar;
+      document.getElementById("btn-ver").innerText = texts[lang].btn_ver;
+      document.getElementById("btn-exportar").innerText = texts[lang].btn_exportar;
+      document.getElementById("btn-borrar").innerText = texts[lang].btn_borrar;
+      document.getElementById("btn-borrar-todo").innerText = texts[lang].btn_borrar_todo;
+      document.getElementById("lbl-historial").innerText = texts[lang].historial;
+      document.getElementById("status").innerText = texts[lang].esperando;
+
+      // Botón activo
+      document.getElementById("btn-es").classList.toggle("active", lang === "es");
+      document.getElementById("btn-en").classList.toggle("active", lang === "en");
+
+      actualizarLista();
+    }
+    document.getElementById("btn-es").onclick = () => cambiarIdioma("es");
+    document.getElementById("btn-en").onclick = () => cambiarIdioma("en");
+
     const status = document.getElementById("status");
     const lista = document.getElementById("lista");
     const inputNombre = document.getElementById("nombre");
 
     function guardarUbicacion() {
       if (!navigator.geolocation) {
-        status.innerText = "⚠️ Tu navegador no soporta geolocalización.";
+        status.innerText = texts[lang].error_no_geoloc;
         status.style.background = "#fef2f2";
         status.style.color = "#b91c1c";
         return;
       }
-
-      status.innerText = "📡 Obteniendo ubicación...";
+      status.innerText = texts[lang].obteniendo;
       status.style.background = "#fffde7";
       status.style.color = "#92400e";
-
       navigator.geolocation.getCurrentPosition(
         function(position) {
           const lat = position.coords.latitude.toFixed(6);
           const lon = position.coords.longitude.toFixed(6);
           const fecha = new Date().toLocaleString();
-          const nombre = inputNombre.value.trim() || "(sin nombre)";
-
+          const nombre = inputNombre.value.trim() || (lang === "es" ? "(sin nombre)" : "(unnamed)");
           let ubicaciones = JSON.parse(localStorage.getItem("ubicaciones")) || [];
           ubicaciones.push({ lat, lon, fecha, nombre });
           localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
-
-          status.innerText = `✅ Ubicación guardada:\n${nombre}\n${lat}, ${lon}\n🕒 ${fecha}`;
+          status.innerText = texts[lang].guardada({ nombre, lat, lon, fecha });
           status.style.background = "#dcfce7";
           status.style.color = "#166534";
           inputNombre.value = "";
           actualizarLista();
         },
         function(error) {
-          let mensaje = "❌ Error al obtener ubicación.\n";
+          let mensaje = texts[lang].error_obteniendo;
           switch(error.code) {
-            case error.PERMISSION_DENIED:
-              mensaje += "⛔ Permiso denegado. Ve a Ajustes > Safari > Ubicación."; break;
-            case error.POSITION_UNAVAILABLE:
-              mensaje += "📡 Posición no disponible."; break;
-            case error.TIMEOUT:
-              mensaje += "⏱️ Tiempo de espera excedido."; break;
-            default:
-              mensaje += "❓ Error desconocido."; break;
+            case error.PERMISSION_DENIED:  mensaje += texts[lang].permiso_denegado; break;
+            case error.POSITION_UNAVAILABLE: mensaje += texts[lang].pos_no_disp; break;
+            case error.TIMEOUT: mensaje += texts[lang].timeout; break;
+            default: mensaje += texts[lang].error_desconocido; break;
           }
           status.innerText = mensaje;
           status.style.background = "#fef2f2";
@@ -212,7 +316,7 @@
         const url = `https://maps.google.com/?q=${lat},${lon}`;
         window.open(url, "_blank");
       } else {
-        status.innerText = "⚠️ Selecciona una ubicación de la lista.";
+        status.innerText = texts[lang].error_selecciona_ubicacion;
         status.style.background = "#fef2f2";
         status.style.color = "#b91c1c";
       }
@@ -221,12 +325,12 @@
     function exportarUbicaciones() {
       const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones")) || [];
       if (ubicaciones.length === 0) {
-        status.innerText = "⚠️ No hay ubicaciones para exportar.";
+        status.innerText = texts[lang].error_no_ubicaciones;
         status.style.background = "#fef2f2";
         status.style.color = "#b91c1c";
         return;
       }
-      let texto = "Nombre,Fecha y Hora,Latitud,Longitud\n";
+      let texto = texts[lang].csv_header;
       ubicaciones.forEach(u => {
         texto += `"${u.nombre}","${u.fecha}",${u.lat},${u.lon}\n`;
       });
@@ -238,7 +342,7 @@
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      status.innerText = "✅ Archivo exportado.";
+      status.innerText = texts[lang].exportado;
       status.style.background = "#dcfce7";
       status.style.color = "#166534";
     }
@@ -250,32 +354,32 @@
         ubicaciones.splice(seleccion, 1);
         localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
         actualizarLista();
-        status.innerText = "🗑️ Ubicación eliminada.";
+        status.innerText = texts[lang].eliminada;
         status.style.background = "#ffe7e7";
         status.style.color = "#c026d3";
       } else {
-        status.innerText = "⚠️ Selecciona una ubicación para borrar.";
+        status.innerText = texts[lang].error_selecciona_borrar;
         status.style.background = "#fef2f2";
         status.style.color = "#b91c1c";
       }
     }
 
     function borrarTodasUbicaciones() {
-      const confirmacion = confirm("¿Estás seguro que deseas eliminar todas las ubicaciones guardadas?");
+      const confirmacion = confirm(texts[lang].confirm_borrar_todo);
       if (confirmacion) {
         localStorage.removeItem("ubicaciones");
         actualizarLista();
-        status.innerText = "🧹 Todas las ubicaciones fueron eliminadas.";
+        status.innerText = texts[lang].todas_eliminadas;
         status.style.background = "#ffe7e7";
         status.style.color = "#b91c1c";
       } else {
-        status.innerText = "❎ Operación cancelada.";
+        status.innerText = texts[lang].cancelada;
         status.style.background = "#f3f6fb";
         status.style.color = "#374151";
       }
     }
-    // Inicializar lista al cargar
-    actualizarLista();
+    // Inicializar
+    cambiarIdioma(lang);
   </script>
 </body>
 </html>
