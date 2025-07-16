@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Localizador GPS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --secondary: #e0e7ef;
+      --bg: #f3f6fb;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --radius: 16px;
+      --shadow: 0 2px 8px rgba(44, 62, 80, 0.10);
+    }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      margin: 0; padding: 0;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .container {
+      background: #fff;
+      margin: 32px 0;
+      padding: 28px 18px 24px 18px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      max-width: 380px;
+      width: 100%;
+      box-sizing: border-box;
+      animation: fadeIn .8s;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+    h1 {
+      font-size: 1.8em;
+      color: var(--primary);
+      margin-bottom: 18px;
+      letter-spacing: .5px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border-radius: var(--radius);
+      border: 1px solid #ddd;
+      margin-bottom: 10px;
+      background: #f8fafc;
+      font-size: 1em;
+      outline: none;
+      transition: border 0.2s;
+    }
+    input[type="text"]:focus { border: 1.5px solid var(--primary); }
+    .buttons {
+      display: flex; flex-wrap: wrap;
+      gap: 12px; justify-content: center;
+      margin-bottom: 10px;
+    }
+    button {
+      flex: 1 1 160px;
+      padding: 13px 0;
+      font-size: 1.08em;
+      font-weight: 500;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(37,99,235,0.08);
+      transition: background 0.15s, box-shadow 0.2s, transform 0.08s;
+      margin: 0 0 0 0;
+    }
+    button:hover, button:focus { background: #1d4ed8; box-shadow: 0 4px 14px rgba(37,99,235,0.13); transform: translateY(-1px) scale(1.02);}
+    button.danger { background: var(--danger);}
+    button.danger:hover { background: #b91c1c;}
+    button.secondary { background: var(--secondary); color: var(--primary);}
+    button.secondary:hover { background: #dbeafe;}
+    #status {
+      background: #f5faff;
+      border-radius: var(--radius);
+      margin: 18px 0 0 0;
+      padding: 13px 9px;
+      font-weight: 500;
+      font-size: 1em;
+      color: #374151;
+      min-height: 38px;
+      border: 1px solid #e2e8f0;
+      word-break: break-word;
+      transition: background 0.3s, color 0.2s;
+    }
+    #historial {
+      margin-top: 18px;
+      text-align: left;
+    }
+    label {
+      font-weight: 500;
+      color: #444;
+      font-size: 1em;
+    }
+    select {
+      width: 100%;
+      font-size: 1em;
+      border-radius: var(--radius);
+      border: 1px solid #ddd;
+      background: #f8fafc;
+      margin-top: 6px;
+      min-height: 42px;
+      box-sizing: border-box;
+      padding: 7px;
+    }
+    @media (max-width: 450px) {
+      .container { max-width: 99vw; margin: 0; padding: 10px 2vw 20px 2vw;}
+      h1 { font-size: 1.3em;}
+      button, input, select { font-size: 0.98em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌍 Localizador GPS</h1>
+    <input type="text" id="nombre" placeholder="🔤 Nombre de la ubicación (opcional)">
+    <div class="buttons">
+      <button onclick="guardarUbicacion()">📍 Guardar Ubicación</button>
+      <button class="secondary" onclick="abrirMapaSeleccionado()">🗺️ Ver Seleccionada</button>
+      <button class="secondary" onclick="exportarUbicaciones()">⬇️ Exportar a CSV</button>
+      <button class="danger" onclick="borrarUbicacionSeleccionada()">🗑️ Borrar Seleccionada</button>
+      <button class="danger" onclick="borrarTodasUbicaciones()">🧹 Borrar Todo</button>
+    </div>
+    <div id="status">Esperando acción...</div>
+    <div id="historial">
+      <label for="lista">📌 Ubicaciones guardadas:</label>
+      <select id="lista" size="5"></select>
+    </div>
+  </div>
+  <script>
+    const status = document.getElementById("status");
+    const lista = document.getElementById("lista");
+    const inputNombre = document.getElementById("nombre");
+
+    function guardarUbicacion() {
+      if (!navigator.geolocation) {
+        status.innerText = "⚠️ Tu navegador no soporta geolocalización.";
+        status.style.background = "#fef2f2";
+        status.style.color = "#b91c1c";
+        return;
+      }
+
+      status.innerText = "📡 Obteniendo ubicación...";
+      status.style.background = "#fffde7";
+      status.style.color = "#92400e";
+
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          const lat = position.coords.latitude.toFixed(6);
+          const lon = position.coords.longitude.toFixed(6);
+          const fecha = new Date().toLocaleString();
+          const nombre = inputNombre.value.trim() || "(sin nombre)";
+
+          let ubicaciones = JSON.parse(localStorage.getItem("ubicaciones")) || [];
+          ubicaciones.push({ lat, lon, fecha, nombre });
+          localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
+
+          status.innerText = `✅ Ubicación guardada:\n${nombre}\n${lat}, ${lon}\n🕒 ${fecha}`;
+          status.style.background = "#dcfce7";
+          status.style.color = "#166534";
+          inputNombre.value = "";
+          actualizarLista();
+        },
+        function(error) {
+          let mensaje = "❌ Error al obtener ubicación.\n";
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              mensaje += "⛔ Permiso denegado. Ve a Ajustes > Safari > Ubicación."; break;
+            case error.POSITION_UNAVAILABLE:
+              mensaje += "📡 Posición no disponible."; break;
+            case error.TIMEOUT:
+              mensaje += "⏱️ Tiempo de espera excedido."; break;
+            default:
+              mensaje += "❓ Error desconocido."; break;
+          }
+          status.innerText = mensaje;
+          status.style.background = "#fef2f2";
+          status.style.color = "#b91c1c";
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    }
+
+    function actualizarLista() {
+      lista.innerHTML = "";
+      let ubicaciones = JSON.parse(localStorage.getItem("ubicaciones")) || [];
+      ubicaciones.forEach((item, index) => {
+        const option = document.createElement("option");
+        option.value = index;
+        option.text = `${item.nombre} | ${item.fecha} - ${item.lat}, ${item.lon}`;
+        lista.appendChild(option);
+      });
+    }
+
+    function abrirMapaSeleccionado() {
+      const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones")) || [];
+      const seleccion = lista.selectedIndex;
+      if (seleccion >= 0 && ubicaciones[seleccion]) {
+        const { lat, lon } = ubicaciones[seleccion];
+        const url = `https://maps.google.com/?q=${lat},${lon}`;
+        window.open(url, "_blank");
+      } else {
+        status.innerText = "⚠️ Selecciona una ubicación de la lista.";
+        status.style.background = "#fef2f2";
+        status.style.color = "#b91c1c";
+      }
+    }
+
+    function exportarUbicaciones() {
+      const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones")) || [];
+      if (ubicaciones.length === 0) {
+        status.innerText = "⚠️ No hay ubicaciones para exportar.";
+        status.style.background = "#fef2f2";
+        status.style.color = "#b91c1c";
+        return;
+      }
+      let texto = "Nombre,Fecha y Hora,Latitud,Longitud\n";
+      ubicaciones.forEach(u => {
+        texto += `"${u.nombre}","${u.fecha}",${u.lat},${u.lon}\n`;
+      });
+      const blob = new Blob([texto], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "ubicaciones.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      status.innerText = "✅ Archivo exportado.";
+      status.style.background = "#dcfce7";
+      status.style.color = "#166534";
+    }
+
+    function borrarUbicacionSeleccionada() {
+      let ubicaciones = JSON.parse(localStorage.getItem("ubicaciones")) || [];
+      const seleccion = lista.selectedIndex;
+      if (seleccion >= 0) {
+        ubicaciones.splice(seleccion, 1);
+        localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
+        actualizarLista();
+        status.innerText = "🗑️ Ubicación eliminada.";
+        status.style.background = "#ffe7e7";
+        status.style.color = "#c026d3";
+      } else {
+        status.innerText = "⚠️ Selecciona una ubicación para borrar.";
+        status.style.background = "#fef2f2";
+        status.style.color = "#b91c1c";
+      }
+    }
+
+    function borrarTodasUbicaciones() {
+      const confirmacion = confirm("¿Estás seguro que deseas eliminar todas las ubicaciones guardadas?");
+      if (confirmacion) {
+        localStorage.removeItem("ubicaciones");
+        actualizarLista();
+        status.innerText = "🧹 Todas las ubicaciones fueron eliminadas.";
+        status.style.background = "#ffe7e7";
+        status.style.color = "#b91c1c";
+      } else {
+        status.innerText = "❎ Operación cancelada.";
+        status.style.background = "#f3f6fb";
+        status.style.color = "#374151";
+      }
+    }
+    // Inicializar lista al cargar
+    actualizarLista();
+  </script>
+</body>
+</html>
