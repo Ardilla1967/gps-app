@@ -143,8 +143,8 @@
 </head>
 <body>
   <div class="lang-switch" id="lang-switch">
-    <button id="btn-es">ES</button>
-    <button id="btn-en">EN</button>
+    <button id="btn-es"></button>
+    <button id="btn-en"></button>
   </div>
   <div class="container">
     <h1 id="titulo">🌍 Localizador GPS</h1>
@@ -166,6 +166,9 @@
     // Traducciones
     const texts = {
       es: {
+        lang_btn_es: "Español",
+        lang_btn_en: "Inglés",
+        title: "Localizador GPS",
         titulo: "🌍 Localizador GPS",
         placeholder: "🔤 Nombre de la ubicación (opcional)",
         btn_guardar: "📍 Guardar Ubicación",
@@ -194,6 +197,9 @@
         csv_header: "Nombre,Fecha y Hora,Latitud,Longitud\n"
       },
       en: {
+        lang_btn_es: "Spanish",
+        lang_btn_en: "English",
+        title: "GPS Locator",
         titulo: "🌍 GPS Locator",
         placeholder: "🔤 Location name (optional)",
         btn_guardar: "📍 Save Location",
@@ -223,7 +229,6 @@
       }
     };
 
-    // Detección de idioma por URL, localStorage o navegador
     function getParamLang() {
       const urlParams = new URLSearchParams(window.location.search);
       let param = urlParams.get('lang');
@@ -233,13 +238,10 @@
       return null;
     }
     function getInitialLang() {
-      // 1. URL param
       let urlLang = getParamLang();
       if (urlLang) return urlLang;
-      // 2. localStorage
       let stored = localStorage.getItem("lang");
       if (stored && (stored === 'es' || stored === 'en')) return stored;
-      // 3. Navegador
       let navLang = navigator.language.slice(0,2);
       return (navLang === 'en') ? 'en' : 'es';
     }
@@ -256,6 +258,13 @@
       lang = nuevo;
       localStorage.setItem("lang", lang);
       updateUrlLang(lang);
+
+      // Cambiar <title>
+      document.title = texts[lang].title;
+
+      // Cambia textos de los botones de idioma
+      document.getElementById("btn-es").innerText = texts[lang].lang_btn_es;
+      document.getElementById("btn-en").innerText = texts[lang].lang_btn_en;
 
       document.getElementById("titulo").innerText = texts[lang].titulo;
       document.getElementById("nombre").placeholder = texts[lang].placeholder;
