@@ -173,10 +173,10 @@
   <div class="container">
     <input type="text" id="nombre" placeholder="Nombre de la ubicación (opcional)">
     <div class="buttons">
-      <button id="btn-guardar">Guardar ubicación</button>
+      <button id="btn-guardar" onclick="guardarUbicacion()">Guardar ubicación</button>
       <button id="btn-ver" onclick="abrirSelectorMapa()">Ver en mapa</button>
-      <button id="btn-exportar" class="secondary">Exportar a Excel</button>
-      <button id="btn-borrar-todo" class="danger">Borrar todo</button>
+      <button id="btn-exportar" class="secondary" onclick="exportarUbicaciones()">Exportar a Excel</button>
+      <button id="btn-borrar-todo" class="danger" onclick="borrarTodasUbicaciones()">Borrar todo</button>
     </div>
     <button class="secondary" onclick="abrirSelectorMapa()">📍 Ubicaciones guardadas</button>
     <div id="status">Esperando acción...</div>
@@ -190,9 +190,84 @@
     <div class="modal-content">
       <h3>Elige ubicación a ver en en mapa</h3>
       <select id="modal-mapas-lista"></select><br>
-      <button id="btn-modal-ver">Ver en mapa</button>
+      <button id="btn-modal-ver" onclick="confirmarMapaUbicacion()">Ver en mapa</button>
       <button id="btn-modal-cancelar" onclick="cerrarModalMapa()">Cancelar</button>
     </div>
   </div>
+
+  <script>
+    function guardarUbicacion() {
+      if (!navigator.geolocation) {
+        alert("Geolocalización no soportada");
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(function(position) {
+        const nombre = document.getElementById("nombre").value || "(sin nombre)";
+        const fecha = new Date().toLocaleString();
+        const lat = position.coords.latitude.toFixed(6);
+        const lon = position.coords.longitude.toFixed(6);
+        const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+        ubicaciones.push({ nombre, fecha, lat, lon });
+        localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
+        actualizarLista();
+        document.getElementById("status").innerText = `✅ Ubicación guardada: ${nombre}`;
+        document.getElementById("nombre").value = "";
+      }, function(error) {
+        alert("Error obteniendo ubicación: " + error.message);
+      });
+    }
+
+    function actualizarLista() {
+      const lista = document.getElementById("lista");
+      lista.innerHTML = "";
+      const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+      ubicaciones.forEach((u, i) => {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.text = `${u.nombre} | ${u.fecha} - ${u.lat},${u.lon}`;
+        lista.appendChild(opt);
+      });
+      const modalLista = document.getElementById("modal-mapas-lista");
+      modalLista.innerHTML = lista.innerHTML;
+    }
+
+    function abrirSelectorMapa() {
+      actualizarLista();
+      document.getElementById("modal-mapas").style.display = "block";
+    }
+    function cerrarModalMapa() {
+      document.getElementById("modal-mapas").style.display = "none";
+    }
+    function confirmarMapaUbicacion() {
+      const idx = document.getElementById("modal-mapas-lista").value;
+      const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+      if (ubicaciones[idx]) {
+        const { lat, lon } = ubicaciones[idx];
+        window.open(`https://maps.google.com/?q=${lat},${lon}`, "_blank");
+        cerrarModalMapa();
+      }
+    }
+    function exportarUbicaciones() {
+      const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+      if (ubicaciones.length === 0) return alert("No hay ubicaciones");
+      let csv = "Nombre,Fecha,Latitud,Longitud\n";
+      ubicaciones.forEach(u => {
+        csv += `${u.nombre},${u.fecha},${u.lat},${u.lon}\n`;
+      });
+      const blob = new Blob([csv], { type: "text/csv" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "ubicaciones.csv";
+      a.click();
+    }
+    function borrarTodasUbicaciones() {
+      if (confirm("¿Seguro que deseas borrar todas las ubicaciones?")) {
+        localStorage.removeItem("ubicaciones");
+        actualizarLista();
+        document.getElementById("status").innerText = "🧹 Todas las ubicaciones eliminadas.";
+      }
+    }
+    actualizarLista();
+  </script>
 </body>
 </html>
