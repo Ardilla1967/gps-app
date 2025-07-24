@@ -163,7 +163,7 @@
     <button onclick="setLang('en')">🇺🇸 EN</button>
   </div>
   <div class="container">
-    <input type="text" id="nombre" placeholder="Nombre de la ubicación (opciona/)" />
+    <input type="text" id="nombre" placeholder="Nombre de la ubicación (opcional)" />
 
     <div class="grid-buttons">
       <button id="btn-guardar" class="guardar" onclick="guardarUbicacion()">📍 Guardar ubicación</button>
@@ -181,19 +181,68 @@
 
   <div id="modal">
     <div class="modal-content">
-      <h3>Elige ubicación a ver en en mapa</h3>
+      <h3 id="modal-title">Elige ubicación a ver en el mapa</h3>
       <select id="selector-ubicaciones"></select>
-      <button onclick="verSeleccionadaEnMapa()">Ver en mapa</button>
-      <button onclick="cerrarModal()">Cancelar</button>
+      <button onclick="verSeleccionadaEnMapa()" id="btn-ver">Ver en mapa</button>
+      <button onclick="cerrarModal()" id="btn-cancelar">Cancelar</button>
     </div>
   </div>
 
   <script>
-    let lang = 'es';
+    let lang = localStorage.getItem("lang") || 'es';
 
-    function setLang(l) {
-      lang = l;
-      alert(`Idioma cambiado a: ${l === 'es' ? 'Español' : 'Inglés'}`);
+    const textos = {
+      es: {
+        placeholder: "Nombre de la ubicación (opcional)",
+        guardar: "📍 Guardar ubicación",
+        ver: "🗺️ Ver en mapa",
+        exportar: "📊 Exportar a Excel",
+        borrar: "📌 Borrar todo",
+        status_inicio: "Esperando acción...",
+        resumen: n => `📍 Ubicaciones guardadas: ${n}`,
+        modal_titulo: "Elige ubicación a ver en el mapa",
+        modal_ver: "Ver en mapa",
+        modal_cancelar: "Cancelar",
+        guardado: nombre => `✅ Guardado: ${nombre}`,
+        no_hay: "No hay ubicaciones",
+        confirm: "¿Borrar todas las ubicaciones?",
+        eliminado: "🧹 Todo eliminado."
+      },
+      en: {
+        placeholder: "Location name (optional)",
+        guardar: "📍 Save location",
+        ver: "🗺️ View on map",
+        exportar: "📊 Export to Excel",
+        borrar: "📌 Delete all",
+        status_inicio: "Waiting for action...",
+        resumen: n => `📍 Saved locations: ${n}`,
+        modal_titulo: "Select location to view on map",
+        modal_ver: "View on map",
+        modal_cancelar: "Cancel",
+        guardado: nombre => `✅ Saved: ${nombre}`,
+        no_hay: "No locations available",
+        confirm: "Delete all saved locations?",
+        eliminado: "🧹 All deleted."
+      }
+    };
+
+    function aplicarTraduccion() {
+      document.getElementById("nombre").placeholder = textos[lang].placeholder;
+      document.getElementById("btn-guardar").innerText = textos[lang].guardar;
+      document.querySelector(".mapa").innerText = textos[lang].ver;
+      document.querySelector(".exportar").innerText = textos[lang].exportar;
+      document.querySelector(".borrar").innerText = textos[lang].borrar;
+      document.getElementById("mensaje-status").innerText = textos[lang].status_inicio;
+      document.getElementById("modal-title").innerText = textos[lang].modal_titulo;
+      document.getElementById("btn-ver").innerText = textos[lang].modal_ver;
+      document.getElementById("btn-cancelar").innerText = textos[lang].modal_cancelar;
+      actualizarResumen();
+    }
+
+    function setLang(nuevo) {
+      lang = nuevo;
+      localStorage.setItem("lang", lang);
+      aplicarTraduccion();
     }
 
     function guardarUbicacion() {
@@ -209,7 +258,7 @@
         const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
         ubicaciones.push({ nombre, fecha, lat, lon });
         localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
-        document.getElementById("mensaje-status").innerText = `✅ Guardado: ${nombre}`;
+        document.getElementById("mensaje-status").innerText = textos[lang].guardado(nombre);
         document.getElementById("nombre").value = "";
         document.getElementById("btn-guardar").style.backgroundColor = 'rgb(117,250,97)';
         actualizarResumen();
@@ -220,12 +269,12 @@
 
     function actualizarResumen() {
       const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
-      document.getElementById("lista-resumen").innerText = `📍 Ubicaciones guardadas: ${ubicaciones.length}`;
+      document.getElementById("lista-resumen").innerText = textos[lang].resumen(ubicaciones.length);
     }
 
     function exportarUbicaciones() {
       const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
-      if (ubicaciones.length === 0) return alert("No hay ubicaciones.");
+      if (ubicaciones.length === 0) return alert(textos[lang].no_hay);
       let csv = "Nombre,Fecha,Latitud,Longitud\n";
       ubicaciones.forEach(u => csv += `${u.nombre},${u.fecha},${u.lat},${u.lon}\n`);
       const blob = new Blob([csv], { type: "text/csv" });
@@ -236,9 +285,9 @@
     }
 
     function borrarUbicaciones() {
-      if (confirm("¿Borrar todas las ubicaciones?")) {
+      if (confirm(textos[lang].confirm)) {
         localStorage.removeItem("ubicaciones");
-        document.getElementById("mensaje-status").innerText = "🧹 Todo eliminado.";
+        document.getElementById("mensaje-status").innerText = textos[lang].eliminado;
         actualizarResumen();
       }
     }
@@ -249,7 +298,7 @@
       const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
       if (ubicaciones.length === 0) {
         const opt = document.createElement("option");
-        opt.text = "No hay ubicaciones";
+        opt.text = textos[lang].no_hay;
         selector.appendChild(opt);
       } else {
         ubicaciones.forEach((u, i) => {
@@ -276,7 +325,7 @@
       }
     }
 
-    window.onload = actualizarResumen;
+    window.onload = aplicarTraduccion;
   </script>
 </body>
 </html>
