@@ -83,6 +83,10 @@
       font-size: 0.95em;
       font-weight: bold;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
     }
     .guardar {
       background-color: var(--blue-light);
@@ -168,6 +172,11 @@
       color: #444;
       border: none;
     }
+    /* Para selección múltiple mejor visual */
+    #selector-borrar-ubicacion {
+      min-height: 90px;
+      font-size: .99em;
+    }
   </style>
 </head>
 <body>
@@ -180,13 +189,29 @@
     <input type="text" id="nombre" placeholder="Nombre de la ubicación (opcional)" />
 
     <div class="grid-buttons">
-      <button id="btn-guardar" class="guardar" onclick="guardarUbicacion()">📍 Guardar ubicación</button>
-      <button class="mapa" onclick="abrirModal()">🗺️ Ver en mapa</button>
+      <button id="btn-guardar" class="guardar" onclick="guardarUbicacion()">
+        <span style="display:inline-block;vertical-align:middle;width:1.2em;height:1.2em;">
+          <svg viewBox="0 0 24 24" fill="#ea4335" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C7.59 2 4 5.42 4 9.5c0 5.39 6.48 11.88 6.75 12.15.41.41 1.08.41 1.49 0C13.52 21.38 20 14.89 20 9.5 20 5.42 16.41 2 12 2zm0 17.77c-2.34-2.36-6-6.91-6-10.27 0-3.04 2.69-5.5 6-5.5s6 2.46 6 5.5c0 3.36-3.66 7.91-6 10.27z"/>
+            <circle cx="12" cy="9.5" r="2.5" fill="#4285f4"/>
+          </svg>
+        </span>
+        <span id="guardar-txt"></span>
+      </button>
+      <button class="mapa" onclick="abrirModal()">
+        <span style="display:inline-block;vertical-align:middle;width:1.2em;height:1.2em;">
+          <svg viewBox="0 0 24 24" fill="#ea4335" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C7.59 2 4 5.42 4 9.5c0 5.39 6.48 11.88 6.75 12.15.41.41 1.08.41 1.49 0C13.52 21.38 20 14.89 20 9.5 20 5.42 16.41 2 12 2zm0 17.77c-2.34-2.36-6-6.91-6-10.27 0-3.04 2.69-5.5 6-5.5s6 2.46 6 5.5c0 3.36-3.66 7.91-6 10.27z"/>
+            <circle cx="12" cy="9.5" r="2.5" fill="#4285f4"/>
+          </svg>
+        </span>
+        <span id="ver-txt"></span>
+      </button>
     </div>
 
     <div class="grid-buttons">
-      <button class="exportar" onclick="exportarUbicaciones()">📊 Exportar a Excel</button>
-      <button class="borrar" onclick="abrirModalBorrar()">🗑️ Borrar ubicaciones</button>
+      <button class="exportar" onclick="exportarUbicaciones()">📊 <span id="exportar-txt"></span></button>
+      <button class="borrar" onclick="abrirModalBorrar()">🗑️ <span id="borrar-txt"></span></button>
     </div>
 
     <div class="guardado" id="mensaje-status">Esperando acción...</div>
@@ -215,12 +240,12 @@
     </div>
   </div>
 
-  <!-- Modal de borrar selección individual -->
+  <!-- Modal de borrar selección múltiple -->
   <div id="modal-borrar-seleccion" style="display:none; position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:12;justify-content:center;align-items:center;background:rgba(0,0,0,0.4);">
     <div class="modal-content">
-      <h3 id="modal-borrar-seleccion-title">Selecciona ubicación a borrar</h3>
-      <select id="selector-borrar-ubicacion"></select>
-      <button onclick="borrarSeleccionada()" id="btn-borrar-una" class="confirm">Borrar</button>
+      <h3 id="modal-borrar-seleccion-title">Selecciona localizaciones a borrar</h3>
+      <select id="selector-borrar-ubicacion" multiple></select>
+      <button onclick="borrarMultiplesSeleccionadas()" id="btn-borrar-una" class="confirm">Borrar</button>
       <button onclick="cerrarModalBorrarSeleccion()" id="btn-borrar-cancelar2" class="cancel">Cancelar</button>
     </div>
   </div>
@@ -231,10 +256,10 @@
     const textos = {
       es: {
         placeholder: "Nombre de la ubicación (opcional)",
-        guardar: "📍 Guardar ubicación",
-        ver: "🗺️ Ver en mapa",
-        exportar: "📊 Exportar a Excel",
-        borrar: "🗑️ Borrar ubicaciones",
+        guardar: "Guardar ubicación",
+        ver: "Ver en mapa",
+        exportar: "Exportar a Excel",
+        borrar: "Borrar ubicaciones",
         status_inicio: "Esperando acción...",
         resumen: n => `📍 Ubicaciones guardadas: ${n}`,
         modal_titulo: "Elige ubicación a ver en el mapa",
@@ -243,20 +268,20 @@
         guardado: nombre => `✅ Guardado: ${nombre}`,
         no_hay: "No hay ubicaciones",
         confirm: "¿Seguro que deseas borrar TODAS las ubicaciones?",
-        eliminado: "🧹 Todo eliminado.",
+        eliminado: "🧹 Eliminado.",
         modal_borrar_title: "¿Qué deseas borrar?",
         btn_seleccionar: "Seleccionar",
         btn_todas: "Todas",
         btn_cancelar: "Cancelar",
-        modal_borrar_seleccion_title: "Selecciona ubicación a borrar",
+        modal_borrar_seleccion_title: "Selecciona localizaciones a borrar",
         btn_borrar_una: "Borrar"
       },
       en: {
         placeholder: "Location name (optional)",
-        guardar: "📍 Save location",
-        ver: "🗺️ View on map",
-        exportar: "📊 Export to Excel",
-        borrar: "🗑️ Delete locations",
+        guardar: "Save location",
+        ver: "View on map",
+        exportar: "Export to Excel",
+        borrar: "Delete locations",
         status_inicio: "Waiting for action...",
         resumen: n => `📍 Saved locations: ${n}`,
         modal_titulo: "Select location to view on map",
@@ -265,22 +290,22 @@
         guardado: nombre => `✅ Saved: ${nombre}`,
         no_hay: "No locations available",
         confirm: "Are you sure you want to DELETE ALL locations?",
-        eliminado: "🧹 All deleted.",
+        eliminado: "🧹 Deleted.",
         modal_borrar_title: "What do you want to delete?",
         btn_seleccionar: "Select",
         btn_todas: "All",
         btn_cancelar: "Cancel",
-        modal_borrar_seleccion_title: "Select location to delete",
+        modal_borrar_seleccion_title: "Select locations to delete",
         btn_borrar_una: "Delete"
       }
     };
 
     function aplicarTraduccion() {
       document.getElementById("nombre").placeholder = textos[lang].placeholder;
-      document.getElementById("btn-guardar").innerText = textos[lang].guardar;
-      document.querySelector(".mapa").innerText = textos[lang].ver;
-      document.querySelector(".exportar").innerText = textos[lang].exportar;
-      document.querySelector(".borrar").innerText = textos[lang].borrar;
+      document.getElementById("guardar-txt").innerText = textos[lang].guardar;
+      document.getElementById("ver-txt").innerText = textos[lang].ver;
+      document.getElementById("exportar-txt").innerText = textos[lang].exportar;
+      document.getElementById("borrar-txt").innerText = textos[lang].borrar;
       document.getElementById("mensaje-status").innerText = textos[lang].status_inicio;
       document.getElementById("modal-title").innerText = textos[lang].modal_titulo;
       document.getElementById("btn-ver").innerText = textos[lang].modal_ver;
@@ -369,16 +394,18 @@
     function cerrarModalBorrarSeleccion() {
       document.getElementById("modal-borrar-seleccion").style.display = "none";
     }
-    function borrarSeleccionada() {
-      const idx = document.getElementById("selector-borrar-ubicacion").value;
+    function borrarMultiplesSeleccionadas() {
+      const sel = document.getElementById("selector-borrar-ubicacion");
+      const selected = Array.from(sel.selectedOptions).map(opt => parseInt(opt.value)).sort((a,b)=>b-a);
       let ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
-      if (ubicaciones[idx]) {
+      if(selected.length === 0) return; // nada seleccionado
+      for(const idx of selected) {
         ubicaciones.splice(idx, 1);
-        localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
-        document.getElementById("mensaje-status").innerText = textos[lang].eliminado;
-        cerrarModalBorrarSeleccion();
-        actualizarResumen();
       }
+      localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
+      document.getElementById("mensaje-status").innerText = textos[lang].eliminado;
+      cerrarModalBorrarSeleccion();
+      actualizarResumen();
     }
     function confirmarBorrarTodas() {
       if (confirm(textos[lang].confirm)) {
