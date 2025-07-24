@@ -15,7 +15,7 @@
       --blue-light: rgb(115, 251, 253);
       --green-light: rgb(117, 250, 97);
       --radius: 16px;
-      --map-modal-bg: rgb(161, 251, 142);
+      --map-btn-bg: rgb(161, 251, 142);
     }
     body {
       background-color: var(--bg);
@@ -136,7 +136,7 @@
       z-index: 10;
     }
     #modal .modal-content {
-      background: var(--map-modal-bg);
+      background: #fff;
     }
     .modal-content {
       background: white;
@@ -176,11 +176,16 @@
       color: #444;
       border: none;
     }
+    /* Botón verde claro en el modal de mapa */
+    #btn-ver {
+      background: var(--map-btn-bg) !important;
+      color: #222 !important;
+      border: none !important;
+    }
     #selector-borrar-ubicacion {
       min-height: 90px;
       font-size: .99em;
     }
-    /* Modal de confirmación guardar sin nombre */
     #modal-sin-nombre {
       display:none; position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:14;justify-content:center;align-items:center;background:rgba(0,0,0,0.32);
     }
@@ -401,11 +406,13 @@
       navigator.geolocation.getCurrentPosition(function(pos) {
         let nombre = document.getElementById("nombre").value.trim();
         if (!nombre) nombre = (lang === 'es') ? "(sin nombre)" : "(unnamed)";
-        const fecha = new Date().toLocaleString();
+        const ahora = new Date();
+        const fecha = ahora.toLocaleDateString();
+        const hora = ahora.toLocaleTimeString();
         const lat = pos.coords.latitude.toFixed(6);
         const lon = pos.coords.longitude.toFixed(6);
         const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
-        ubicaciones.push({ nombre, fecha, lat, lon });
+        ubicaciones.push({ nombre, fecha, hora, lat, lon });
         localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
         document.getElementById("mensaje-status").innerText = textos[lang].guardado(nombre);
         document.getElementById("nombre").value = "";
@@ -424,8 +431,12 @@
     function exportarUbicaciones() {
       const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
       if (ubicaciones.length === 0) return alert(textos[lang].no_hay);
-      let csv = "Nombre,Fecha,Latitud,Longitud\n";
-      ubicaciones.forEach(u => csv += `${u.nombre},${u.fecha},${u.lat},${u.lon}\n`);
+      let csv = "nombre,fecha,hora,latitud,longitud\n";
+      ubicaciones.forEach(u => {
+        // retrocompatibilidad con ubicaciones viejas (sin campo hora)
+        let h = u.hora ? u.hora : '';
+        csv += `"${u.nombre}","${u.fecha}","${h}","${u.lat}","${u.lon}"\n`;
+      });
       const blob = new Blob([csv], { type: "text/csv" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
