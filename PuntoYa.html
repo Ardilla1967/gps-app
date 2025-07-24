@@ -4,252 +4,172 @@
   <meta charset="UTF-8">
   <title>PuntoYa!</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/jpeg" href="PuntoYa.jpg">
   <style>
     :root {
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --bg: #0f1bb3;
-      --danger: #dc2626;
-      --success: #16a34a;
+      --primary: #1800ad;
+      --danger: #ff3131;
       --yellow: #ffde59;
+      --white: #ffffff;
+      --gray: #f1f5f9;
+      --bg: #0f1bb3;
       --radius: 16px;
-      --shadow: 0 2px 8px rgba(44, 62, 80, 0.10);
-      --logo-shadow: 0 8px 32px 0 #0004;
     }
     body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: var(--bg);
-      margin: 0; padding: 0;
-      min-height: 100vh;
-      display: flex; flex-direction: column; align-items: center;
+      background-color: var(--bg);
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    .logo-header {
-      text-align: center;
-      margin: 24px 0 12px 0;
+    .logo {
+      margin: 24px auto 8px auto;
+      font-size: 1.8em;
+      font-weight: bold;
+      color: var(--white);
     }
-    .logo-header img {
-      width: 140px;
-      background: #fff;
-      border-radius: 18px;
-      box-shadow: var(--logo-shadow);
+    .logo span {
+      color: var(--yellow);
+    }
+    .lang-selector {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .lang-selector button {
+      background-color: var(--white);
+      border: none;
+      padding: 6px 16px;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
     }
     .container {
-      background: #fff;
-      margin: 0 0 36px 0;
-      padding: 28px 18px;
+      background-color: var(--white);
+      padding: 24px 18px;
       border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      max-width: 380px;
-      width: 100%;
-      box-sizing: border-box;
-      animation: fadeIn .8s;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(30px);}
-      to { opacity: 1; transform: translateY(0);}
+      width: 90%;
+      max-width: 340px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
     }
     input[type="text"] {
       width: 100%;
       padding: 12px;
       border-radius: var(--radius);
-      border: 1px solid #ddd;
-      margin-bottom: 10px;
-      background: #f8fafc;
+      border: none;
       font-size: 1em;
+      background-color: var(--gray);
     }
-    .buttons {
+    .grid-buttons {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
-      margin-top: 12px;
+      width: 100%;
     }
     button {
-      padding: 12px 8px;
-      font-size: 1em;
-      font-weight: 500;
-      border-radius: var(--radius);
       border: none;
+      padding: 14px;
+      border-radius: var(--radius);
+      font-size: 0.95em;
+      font-weight: bold;
       cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
     }
-    #btn-guardar {
-      background: var(--danger);
-      color: white;
+    .guardar {
+      background-color: var(--danger);
+      color: var(--white);
     }
-    #btn-ver {
-      background: white;
-      color: #111;
-      border: 1px solid #ccc;
+    .mapa {
+      background-color: var(--white);
+      border: 2px solid var(--gray);
     }
-    .secondary {
-      background: white;
-      color: var(--primary);
-      border: 1px solid var(--primary);
+    .exportar {
+      background-color: var(--white);
+      border: 2px solid var(--gray);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
-    .secondary:hover {
-      background: #f0f8ff;
+    .borrar {
+      background-color: var(--danger);
+      color: var(--white);
     }
-    .danger {
-      background: #dc2626;
-      color: white;
-    }
-    .danger:hover {
-      background: #b91c1c;
-    }
-    #status {
-      background: #f5faff;
+    .guardado, .guardadas {
+      background-color: var(--white);
+      width: 100%;
+      text-align: center;
+      padding: 12px;
       border-radius: var(--radius);
-      margin-top: 20px;
-      padding: 13px 9px;
-      font-weight: 500;
-      font-size: 1em;
-      color: #374151;
-      border: 1px solid #e2e8f0;
-    }
-    #historial {
-      margin-top: 18px;
-    }
-    label {
       font-weight: bold;
-      color: #444;
-      display: block;
-      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
-    select {
-      width: 100%;
-      font-size: 1em;
-      border-radius: var(--radius);
-      border: 1px solid #ddd;
-      background: #f8fafc;
-      padding: 7px;
-      margin-bottom: 10px;
-    }
-    #btn-modal-ver {
-      background: var(--yellow);
-      color: black;
-      font-weight: bold;
-      width: 100%;
-      margin-bottom: 8px;
-      padding: 10px;
-      border-radius: var(--radius);
-      border: none;
-    }
-    #btn-modal-cancelar {
-      background: #f3f4f6;
-      color: #444;
-      width: 100%;
-      padding: 10px;
-      border-radius: var(--radius);
-      border: none;
-    }
-    #modal-mapas {
-      display:none; 
-      position:fixed; 
-      z-index:999; 
-      left:0;top:0;width:100vw;height:100vh;
-      background:rgba(30,30,40,.16);
-    }
-    #modal-mapas .modal-content {
-      background:#fff; 
-      border-radius:14px; 
-      box-shadow:0 10px 40px #0003; 
-      max-width:340px; 
-      margin:8vh auto 0 auto; 
-      padding:20px 14px; 
-      text-align:center;
-    }
-    @media (max-width: 500px) {
-      .logo-header img { width: 92vw; }
-      .container { max-width: 99vw; padding: 18px 12px;}
-      #modal-mapas .modal-content { max-width:98vw;}
+    .guardadas {
+      color: var(--danger);
     }
   </style>
 </head>
 <body>
-  <div class="logo-header">
-    <img src="PuntoYa.jpg" alt="PuntoYa Logo">
+  <div class="logo">PUNTO<span>YA!</span></div>
+  <div class="lang-selector">
+    <button>ES</button>
+    <button>EN</button>
   </div>
   <div class="container">
-    <input type="text" id="nombre" placeholder="Nombre de la ubicación (opcional)">
-    <div class="buttons">
-      <button id="btn-guardar" onclick="guardarUbicacion()">Guardar ubicación</button>
-      <button id="btn-ver" onclick="abrirSelectorMapa()">Ver en mapa</button>
-      <button id="btn-exportar" class="secondary" onclick="exportarUbicaciones()">Exportar a Excel</button>
-      <button id="btn-borrar-todo" class="danger" onclick="borrarTodasUbicaciones()">Borrar todo</button>
-    </div>
-    <button class="secondary" onclick="abrirSelectorMapa()">📍 Ubicaciones guardadas</button>
-    <div id="status">Esperando acción...</div>
-    <div id="historial">
-      <label for="lista">Ubicaciones guardadas:</label>
-      <select id="lista" size="5"></select>
-    </div>
-  </div>
+    <input type="text" id="nombre" placeholder="Nombre de la ubicación (opciona/)" />
 
-  <div id="modal-mapas">
-    <div class="modal-content">
-      <h3>Elige ubicación a ver en en mapa</h3>
-      <select id="modal-mapas-lista"></select><br>
-      <button id="btn-modal-ver" onclick="confirmarMapaUbicacion()">Ver en mapa</button>
-      <button id="btn-modal-cancelar" onclick="cerrarModalMapa()">Cancelar</button>
+    <div class="grid-buttons">
+      <button class="guardar" onclick="guardarUbicacion()">📍 Guardar ubicación</button>
+      <button class="mapa" onclick="verEnMapa()">🗺️ Ver en mapa</button>
     </div>
+
+    <div class="grid-buttons">
+      <button class="exportar" onclick="exportarUbicaciones()">📊 Exportar a Excel</button>
+      <button class="borrar" onclick="borrarUbicaciones()">📌 Borrar todo</button>
+    </div>
+
+    <div class="guardado" id="mensaje-status">✅ Ubicación guardada</div>
+    <div class="guardadas">📍 Ubicaciones guardadas</div>
   </div>
 
   <script>
     function guardarUbicacion() {
       if (!navigator.geolocation) {
-        alert("Geolocalización no soportada");
+        alert("Geolocalización no soportada por el navegador.");
         return;
       }
-      navigator.geolocation.getCurrentPosition(function(position) {
+      navigator.geolocation.getCurrentPosition(function(pos) {
         const nombre = document.getElementById("nombre").value || "(sin nombre)";
         const fecha = new Date().toLocaleString();
-        const lat = position.coords.latitude.toFixed(6);
-        const lon = position.coords.longitude.toFixed(6);
+        const lat = pos.coords.latitude.toFixed(6);
+        const lon = pos.coords.longitude.toFixed(6);
         const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
         ubicaciones.push({ nombre, fecha, lat, lon });
         localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
-        actualizarLista();
-        document.getElementById("status").innerText = `✅ Ubicación guardada: ${nombre}`;
+        document.getElementById("mensaje-status").innerText = `✅ Guardado: ${nombre}`;
         document.getElementById("nombre").value = "";
       }, function(error) {
-        alert("Error obteniendo ubicación: " + error.message);
+        alert("Error al obtener la ubicación: " + error.message);
       });
     }
 
-    function actualizarLista() {
-      const lista = document.getElementById("lista");
-      lista.innerHTML = "";
+    function verEnMapa() {
       const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
-      ubicaciones.forEach((u, i) => {
-        const opt = document.createElement("option");
-        opt.value = i;
-        opt.text = `${u.nombre} | ${u.fecha} - ${u.lat},${u.lon}`;
-        lista.appendChild(opt);
-      });
-      const modalLista = document.getElementById("modal-mapas-lista");
-      modalLista.innerHTML = lista.innerHTML;
+      if (ubicaciones.length === 0) return alert("No hay ubicaciones guardadas.");
+      const ultima = ubicaciones[ubicaciones.length - 1];
+      window.open(`https://maps.google.com/?q=${ultima.lat},${ultima.lon}`, "_blank");
     }
 
-    function abrirSelectorMapa() {
-      actualizarLista();
-      document.getElementById("modal-mapas").style.display = "block";
-    }
-    function cerrarModalMapa() {
-      document.getElementById("modal-mapas").style.display = "none";
-    }
-    function confirmarMapaUbicacion() {
-      const idx = document.getElementById("modal-mapas-lista").value;
-      const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
-      if (ubicaciones[idx]) {
-        const { lat, lon } = ubicaciones[idx];
-        window.open(`https://maps.google.com/?q=${lat},${lon}`, "_blank");
-        cerrarModalMapa();
-      }
-    }
     function exportarUbicaciones() {
       const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
-      if (ubicaciones.length === 0) return alert("No hay ubicaciones");
+      if (ubicaciones.length === 0) return alert("No hay ubicaciones para exportar.");
       let csv = "Nombre,Fecha,Latitud,Longitud\n";
       ubicaciones.forEach(u => {
         csv += `${u.nombre},${u.fecha},${u.lat},${u.lon}\n`;
@@ -260,14 +180,13 @@
       a.download = "ubicaciones.csv";
       a.click();
     }
-    function borrarTodasUbicaciones() {
-      if (confirm("¿Seguro que deseas borrar todas las ubicaciones?")) {
+
+    function borrarUbicaciones() {
+      if (confirm("¿Deseas borrar todas las ubicaciones guardadas?")) {
         localStorage.removeItem("ubicaciones");
-        actualizarLista();
-        document.getElementById("status").innerText = "🧹 Todas las ubicaciones eliminadas.";
+        document.getElementById("mensaje-status").innerText = "🧹 Todas las ubicaciones eliminadas.";
       }
     }
-    actualizarLista();
   </script>
 </body>
 </html>
