@@ -2,17 +2,20 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Localizador GPS</title>
+  <title>PuntoYa!</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Favicon -->
+  <link rel="icon" type="image/jpeg" href="puntoya_logo.jpeg">
   <style>
     :root {
       --primary: #2563eb;
       --primary-hover: #1d4ed8;
-      --bg: #f3f6fb;
+      --bg: #0f1bb3;
       --danger: #dc2626;
       --success: #16a34a;
       --radius: 16px;
       --shadow: 0 2px 8px rgba(44, 62, 80, 0.10);
+      --logo-shadow: 0 8px 32px 0 #0004;
     }
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
@@ -36,15 +39,24 @@
     }
     .lang-bar button {
       font-size: 1.07em;
-      padding: 7px 30px;
+      padding: 7px 26px 7px 16px;
       border-radius: 50px;
       font-weight: 500;
       border: 2px solid var(--primary);
       background: transparent;
       color: var(--primary);
-      transition: background .15s, color .15s, box-shadow .15s;
+      transition: 
+        background .15s, 
+        color .15s, 
+        box-shadow .15s,
+        transform .12s;
       cursor: pointer;
       outline: none;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      position: relative;
+      overflow: hidden;
     }
     .lang-bar button.active {
       background: var(--primary);
@@ -52,11 +64,38 @@
       box-shadow: 0 3px 16px rgba(37,99,235,0.11);
       border-color: var(--primary);
       font-weight: bold;
+      transform: scale(1.07);
     }
     .lang-bar button:not(.active):hover {
       background: #eff6ff;
       color: var(--primary-hover);
       border-color: var(--primary-hover);
+      transform: scale(1.04) translateY(-1px);
+    }
+    .lang-bar .flag {
+      font-size: 1.25em;
+      margin-right: 6px;
+      vertical-align: middle;
+      filter: drop-shadow(0 1px 1px #ccc2);
+      transition: transform 0.15s;
+    }
+    .lang-bar button.active .flag {
+      transform: scale(1.12) rotate(-3deg);
+      filter: drop-shadow(0 3px 4px #bbb6);
+    }
+    .logo-header {
+      text-align: center;
+      margin: 30px 0 10px 0;
+    }
+    .logo-header img {
+      width: 210px;
+      max-width: 80vw;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      filter: drop-shadow(var(--logo-shadow));
+      border-radius: 18px;
+      background: #fff;
     }
     .container {
       background: #fff;
@@ -80,6 +119,7 @@
       letter-spacing: .5px;
       margin-top: 0;
       text-align: center;
+      display: none; /* Ocultamos el h1 de texto para mostrar solo el logo */
     }
     input[type="text"] {
       width: 100%;
@@ -150,21 +190,28 @@
       box-sizing: border-box;
       padding: 7px;
     }
-    @media (max-width: 450px) {
+    @media (max-width: 500px) {
+      .logo-header img { width: 92vw; }
       .container { max-width: 99vw; margin: 0; padding: 10px 2vw 20px 2vw;}
-      h1 { font-size: 1.3em;}
-      button, input, select { font-size: 0.98em; }
-      .lang-bar { border-radius: 0 0 12px 12px; }
     }
   </style>
 </head>
 <body>
   <div class="lang-bar" id="lang-switch">
-    <button id="btn-es"></button>
-    <button id="btn-en"></button>
+    <button id="btn-es">
+      <span class="flag" id="flag-es">🇪🇸</span>
+      <span id="lang-es-text"></span>
+    </button>
+    <button id="btn-en">
+      <span class="flag" id="flag-en">🇬🇧</span>
+      <span id="lang-en-text"></span>
+    </button>
+  </div>
+  <div class="logo-header">
+    <img src="puntoya_logo.jpeg" alt="PuntoYa Logo" id="puntoya-logo">
   </div>
   <div class="container">
-    <h1 id="titulo">🌍 Localizador GPS</h1>
+    <h1 id="titulo">PuntoYa!</h1>
     <input type="text" id="nombre" placeholder="🔤 Nombre de la ubicación (opcional)">
     <div class="buttons">
       <button id="btn-guardar" onclick="guardarUbicacion()">📍 Guardar Ubicación</button>
@@ -185,8 +232,8 @@
       es: {
         lang_btn_es: "Español",
         lang_btn_en: "Inglés",
-        title: "Localizador GPS",
-        titulo: "🌍 Localizador GPS",
+        title: "PuntoYa!",
+        titulo: "PuntoYa!",
         placeholder: "🔤 Nombre de la ubicación (opcional)",
         btn_guardar: "📍 Guardar Ubicación",
         btn_ver: "🗺️ Ver Seleccionada",
@@ -216,8 +263,8 @@
       en: {
         lang_btn_es: "Spanish",
         lang_btn_en: "English",
-        title: "GPS Locator",
-        titulo: "🌍 GPS Locator",
+        title: "PuntoYa!",
+        titulo: "PuntoYa!",
         placeholder: "🔤 Location name (optional)",
         btn_guardar: "📍 Save Location",
         btn_ver: "🗺️ Show Selected",
@@ -279,11 +326,13 @@
       // Cambiar <title>
       document.title = texts[lang].title;
 
-      // Cambia textos de los botones de idioma
-      document.getElementById("btn-es").innerText = texts[lang].lang_btn_es;
-      document.getElementById("btn-en").innerText = texts[lang].lang_btn_en;
+      // Cambia textos de los botones de idioma y banderas
+      document.getElementById("lang-es-text").innerText = texts[lang].lang_btn_es;
+      document.getElementById("lang-en-text").innerText = texts[lang].lang_btn_en;
 
+      // Si quieres puedes mostrar u ocultar el h1
       document.getElementById("titulo").innerText = texts[lang].titulo;
+
       document.getElementById("nombre").placeholder = texts[lang].placeholder;
       document.getElementById("btn-guardar").innerText = texts[lang].btn_guardar;
       document.getElementById("btn-ver").innerText = texts[lang].btn_ver;
@@ -301,6 +350,13 @@
     }
     document.getElementById("btn-es").onclick = () => cambiarIdioma("es");
     document.getElementById("btn-en").onclick = () => cambiarIdioma("en");
+
+    // Asignar textos iniciales de botones de idioma (con span)
+    window.onload = function() {
+      document.getElementById("lang-es-text").innerText = texts[lang].lang_btn_es;
+      document.getElementById("lang-en-text").innerText = texts[lang].lang_btn_en;
+      cambiarIdioma(lang);
+    }
 
     const status = document.getElementById("status");
     const lista = document.getElementById("lista");
@@ -324,117 +380,4 @@
           const nombre = inputNombre.value.trim() || (lang === "es" ? "(sin nombre)" : "(unnamed)");
           let ubicaciones = JSON.parse(localStorage.getItem("ubicaciones")) || [];
           ubicaciones.push({ lat, lon, fecha, nombre });
-          localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
-          status.innerText = texts[lang].guardada({ nombre, lat, lon, fecha });
-          status.style.background = "#dcfce7";
-          status.style.color = "#166534";
-          inputNombre.value = "";
-          actualizarLista();
-        },
-        function(error) {
-          let mensaje = texts[lang].error_obteniendo;
-          switch(error.code) {
-            case error.PERMISSION_DENIED:  mensaje += texts[lang].permiso_denegado; break;
-            case error.POSITION_UNAVAILABLE: mensaje += texts[lang].pos_no_disp; break;
-            case error.TIMEOUT: mensaje += texts[lang].timeout; break;
-            default: mensaje += texts[lang].error_desconocido; break;
-          }
-          status.innerText = mensaje;
-          status.style.background = "#fef2f2";
-          status.style.color = "#b91c1c";
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
-      );
-    }
-
-    function actualizarLista() {
-      lista.innerHTML = "";
-      let ubicaciones = JSON.parse(localStorage.getItem("ubicaciones")) || [];
-      ubicaciones.forEach((item, index) => {
-        const option = document.createElement("option");
-        option.value = index;
-        option.text = `${item.nombre} | ${item.fecha} - ${item.lat}, ${item.lon}`;
-        lista.appendChild(option);
-      });
-    }
-
-    function abrirMapaSeleccionado() {
-      const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones")) || [];
-      const seleccion = lista.selectedIndex;
-      if (seleccion >= 0 && ubicaciones[seleccion]) {
-        const { lat, lon } = ubicaciones[seleccion];
-        const url = `https://maps.google.com/?q=${lat},${lon}`;
-        window.open(url, "_blank");
-      } else {
-        status.innerText = texts[lang].error_selecciona_ubicacion;
-        status.style.background = "#fef2f2";
-        status.style.color = "#b91c1c";
-      }
-    }
-
-    function exportarUbicaciones() {
-      const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones")) || [];
-      if (ubicaciones.length === 0) {
-        status.innerText = texts[lang].error_no_ubicaciones;
-        status.style.background = "#fef2f2";
-        status.style.color = "#b91c1c";
-        return;
-      }
-      let texto = texts[lang].csv_header;
-      ubicaciones.forEach(u => {
-        texto += `"${u.nombre}","${u.fecha}",${u.lat},${u.lon}\n`;
-      });
-      const blob = new Blob([texto], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "ubicaciones.csv";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      status.innerText = texts[lang].exportado;
-      status.style.background = "#dcfce7";
-      status.style.color = "#166534";
-    }
-
-    function borrarUbicacionSeleccionada() {
-      let ubicaciones = JSON.parse(localStorage.getItem("ubicaciones")) || [];
-      const seleccion = lista.selectedIndex;
-      if (seleccion >= 0) {
-        ubicaciones.splice(seleccion, 1);
-        localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
-        actualizarLista();
-        status.innerText = texts[lang].eliminada;
-        status.style.background = "#ffe7e7";
-        status.style.color = "#c026d3";
-      } else {
-        status.innerText = texts[lang].error_selecciona_borrar;
-        status.style.background = "#fef2f2";
-        status.style.color = "#b91c1c";
-      }
-    }
-
-    function borrarTodasUbicaciones() {
-      const confirmacion = confirm(texts[lang].confirm_borrar_todo);
-      if (confirmacion) {
-        localStorage.removeItem("ubicaciones");
-        actualizarLista();
-        status.innerText = texts[lang].todas_eliminadas;
-        status.style.background = "#ffe7e7";
-        status.style.color = "#b91c1c";
-      } else {
-        status.innerText = texts[lang].cancelada;
-        status.style.background = "#f3f6fb";
-        status.style.color = "#374151";
-      }
-    }
-
-    // Inicializar
-    cambiarIdioma(lang);
-  </script>
-</body>
-</html>
+         
