@@ -15,6 +15,7 @@
       --blue-light: rgb(115, 251, 253);
       --green-light: rgb(117, 250, 97);
       --radius: 16px;
+      --map-modal-bg: rgb(161, 251, 142);
     }
     body {
       background-color: var(--bg);
@@ -134,6 +135,9 @@
       align-items: center;
       z-index: 10;
     }
+    #modal .modal-content {
+      background: var(--map-modal-bg);
+    }
     .modal-content {
       background: white;
       border-radius: var(--radius);
@@ -172,10 +176,37 @@
       color: #444;
       border: none;
     }
-    /* Para selección múltiple mejor visual */
     #selector-borrar-ubicacion {
       min-height: 90px;
       font-size: .99em;
+    }
+    /* Modal de confirmación guardar sin nombre */
+    #modal-sin-nombre {
+      display:none; position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:14;justify-content:center;align-items:center;background:rgba(0,0,0,0.32);
+    }
+    #modal-sin-nombre .modal-content {
+      background: #fdfcdc;
+      border-radius: var(--radius);
+      max-width: 310px;
+      margin: 0 auto;
+      padding: 28px 16px 18px 16px;
+      font-size: 1.05em;
+      color: #333;
+    }
+    #modal-sin-nombre button {
+      width: 45%;
+      margin: 10px 5px 0 5px;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 1em;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #modal-sin-nombre .accept { background: #b2e368; color: #111;}
+    #modal-sin-nombre .cancel { background: #f3f3f3; color: #222;}
+    @media (max-width:480px) {
+      .modal-content, #modal .modal-content { max-width:98vw; }
     }
   </style>
 </head>
@@ -183,13 +214,13 @@
   <div class="logo">PUNTO<span>YA!</span></div>
   <div class="lang-selector">
     <button onclick="setLang('es')">🇪🇸 ES</button>
-    <button onclick="setLang('en')">🇺🇸 EN</button>
+    <button onclick="setLang('en')">🇬🇧 EN</button>
   </div>
   <div class="container">
-    <input type="text" id="nombre" placeholder="Nombre de la ubicación (opcional)" />
+    <input type="text" id="nombre" placeholder="Nombre la Actual Ubicación (opcional)" />
 
     <div class="grid-buttons">
-      <button id="btn-guardar" class="guardar" onclick="guardarUbicacion()">
+      <button id="btn-guardar" class="guardar" onclick="preGuardarUbicacion()">
         <span style="display:inline-block;vertical-align:middle;width:1.2em;height:1.2em;">
           <svg viewBox="0 0 24 24" fill="#1874fa" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 2C7.59 2 4 5.42 4 9.5c0 5.39 6.48 11.88 6.75 12.15.41.41 1.08.41 1.49 0C13.52 21.38 20 14.89 20 9.5 20 5.42 16.41 2 12 2zm0 17.77c-2.34-2.36-6-6.91-6-10.27 0-3.04 2.69-5.5 6-5.5s6 2.46 6 5.5c0 3.36-3.66 7.91-6 10.27z"/>
@@ -223,7 +254,7 @@
     <div class="modal-content">
       <h3 id="modal-title">Elige ubicación a ver en el mapa</h3>
       <select id="selector-ubicaciones"></select>
-      <button onclick="verSeleccionadaEnMapa()" id="btn-ver">Ver en mapa</button>
+      <button onclick="verSeleccionadaEnMapa()" id="btn-ver">Ir a Mapa</button>
       <button onclick="cerrarModal()" id="btn-cancelar">Cancelar</button>
     </div>
   </div>
@@ -250,12 +281,23 @@
     </div>
   </div>
 
+  <!-- Modal guardar sin nombre -->
+  <div id="modal-sin-nombre">
+    <div class="modal-content">
+      <span id="mensaje-sin-nombre">La ubicación actual se guardará sin nombre. ¿Deseas continuar?</span>
+      <div style="display:flex;justify-content:center;gap:12px;">
+        <button class="accept" onclick="guardarUbicacion(true)" id="btn-aceptar-sin-nombre">Aceptar</button>
+        <button class="cancel" onclick="cerrarModalSinNombre()" id="btn-cancelar-sin-nombre">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let lang = localStorage.getItem("lang") || 'es';
 
     const textos = {
       es: {
-        placeholder: "Nombre de la ubicación (opcional)",
+        placeholder: "Nombre la Actual Ubicación (opcional)",
         guardar: "Guardar ubicación",
         ver: "Ver en mapa",
         exportar: "Exportar a Excel",
@@ -263,7 +305,7 @@
         status_inicio: "Esperando acción...",
         resumen: n => `📍 Ubicaciones guardadas: ${n}`,
         modal_titulo: "Elige ubicación a ver en el mapa",
-        modal_ver: "Ver en mapa",
+        modal_ver: "Ir a Mapa",
         modal_cancelar: "Cancelar",
         guardado: nombre => `✅ Guardado: ${nombre}`,
         no_hay: "No hay ubicaciones",
@@ -274,10 +316,12 @@
         btn_todas: "Todas",
         btn_cancelar: "Cancelar",
         modal_borrar_seleccion_title: "Selecciona localizaciones a borrar",
-        btn_borrar_una: "Borrar"
+        btn_borrar_una: "Borrar",
+        sin_nombre: "La ubicación actual se guardará sin nombre. ¿Deseas continuar?",
+        aceptar: "Aceptar"
       },
       en: {
-        placeholder: "Location name (optional)",
+        placeholder: "Name Current Location (optional)",
         guardar: "Save location",
         ver: "View on map",
         exportar: "Export to Excel",
@@ -285,7 +329,7 @@
         status_inicio: "Waiting for action...",
         resumen: n => `📍 Saved locations: ${n}`,
         modal_titulo: "Select location to view on map",
-        modal_ver: "View on map",
+        modal_ver: "Go to Map",
         modal_cancelar: "Cancel",
         guardado: nombre => `✅ Saved: ${nombre}`,
         no_hay: "No locations available",
@@ -296,7 +340,9 @@
         btn_todas: "All",
         btn_cancelar: "Cancel",
         modal_borrar_seleccion_title: "Select locations to delete",
-        btn_borrar_una: "Delete"
+        btn_borrar_una: "Delete",
+        sin_nombre: "The current location will be saved without a name. Continue?",
+        aceptar: "Accept"
       }
     };
 
@@ -317,6 +363,9 @@
       document.getElementById("modal-borrar-seleccion-title").innerText = textos[lang].modal_borrar_seleccion_title;
       document.getElementById("btn-borrar-una").innerText = textos[lang].btn_borrar_una;
       document.getElementById("btn-borrar-cancelar2").innerText = textos[lang].btn_cancelar;
+      document.getElementById("mensaje-sin-nombre").innerText = textos[lang].sin_nombre;
+      document.getElementById("btn-aceptar-sin-nombre").innerText = textos[lang].aceptar;
+      document.getElementById("btn-cancelar-sin-nombre").innerText = textos[lang].btn_cancelar;
       actualizarResumen();
     }
 
@@ -326,13 +375,32 @@
       aplicarTraduccion();
     }
 
-    function guardarUbicacion() {
+    // Modal guardar sin nombre
+    function preGuardarUbicacion() {
+      const nombre = document.getElementById("nombre").value.trim();
+      if (!nombre) {
+        document.getElementById("modal-sin-nombre").style.display = "flex";
+      } else {
+        guardarUbicacion(false);
+      }
+    }
+    function cerrarModalSinNombre() {
+      document.getElementById("modal-sin-nombre").style.display = "none";
+    }
+
+    function guardarUbicacion(forzar) {
+      if (!forzar && !document.getElementById("nombre").value.trim()) {
+        preGuardarUbicacion();
+        return;
+      }
+      cerrarModalSinNombre();
       if (!navigator.geolocation) {
         alert("Geolocalización no soportada.");
         return;
       }
       navigator.geolocation.getCurrentPosition(function(pos) {
-        const nombre = document.getElementById("nombre").value || "(sin nombre)";
+        let nombre = document.getElementById("nombre").value.trim();
+        if (!nombre) nombre = (lang === 'es') ? "(sin nombre)" : "(unnamed)";
         const fecha = new Date().toLocaleString();
         const lat = pos.coords.latitude.toFixed(6);
         const lon = pos.coords.longitude.toFixed(6);
@@ -416,7 +484,7 @@
       }
     }
 
-    // MODAL MAPA (sin cambios)
+    // MODAL MAPA
     function abrirModal() {
       const selector = document.getElementById("selector-ubicaciones");
       selector.innerHTML = "";
