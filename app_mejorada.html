@@ -88,11 +88,11 @@
       margin: 30px 0 10px 0;
     }
     .logo-header img {
-      width: 220px;
-      max-width: 90vw;
+      width: 130px;
+      max-width: 70vw;
       height: auto;
       display: block;
-      margin: 0 auto;
+      margin: 0 auto 10px auto;
       filter: drop-shadow(var(--logo-shadow));
       border-radius: 18px;
       background: #fff;
@@ -191,9 +191,43 @@
       box-sizing: border-box;
       padding: 7px;
     }
+    /* Modal estilos */
+    #modal-mapas {
+      display:none; 
+      position:fixed; 
+      z-index:999; 
+      left:0;top:0;width:100vw;height:100vh;
+      background:rgba(30,30,40,.16);
+    }
+    #modal-mapas .modal-content {
+      background:#fff; 
+      border-radius:14px; 
+      box-shadow:0 10px 40px #0003; 
+      max-width:340px; 
+      margin:8vh auto 0 auto; 
+      padding:20px 14px; 
+      text-align:center; 
+      position:relative;
+    }
+    #modal-mapas h3 {
+      margin-top:0; color:#217346; font-size:1.17em;
+    }
+    #modal-mapas select {
+      width:98%;padding:9px;font-size:1em;margin-bottom:18px;
+    }
+    #modal-mapas button {
+      margin-right:8px;margin-left:0;
+      background:#217346;color:#fff;font-weight:500;
+      padding:8px 16px;border-radius:10px;border:none;
+      cursor:pointer;
+    }
+    #modal-mapas button.cancel {
+      background:#f3f4f6;color:#444;
+    }
     @media (max-width: 500px) {
       .logo-header img { width: 92vw; }
       .container { max-width: 99vw; margin: 0; padding: 10px 2vw 20px 2vw;}
+      #modal-mapas .modal-content { max-width:98vw;}
     }
   </style>
 </head>
@@ -225,8 +259,20 @@
         </span>
         <span id="btn-guardar-text"></span>
       </button>
-      <button id="btn-ver" class="secondary" onclick="abrirMapaSeleccionado()">🗺️ Ver Seleccionada</button>
-      <button id="btn-exportar" class="secondary" onclick="exportarUbicaciones()">⬇️ Exportar a CSV</button>
+      <!-- Botón Ver en Mapa (abre modal de selección) -->
+      <button id="btn-ver" class="secondary" onclick="abrirSelectorMapa()">
+        🗺️ <span id="btn-ver-text"></span>
+      </button>
+      <!-- Botón Exportar con Logo Excel -->
+      <button id="btn-exportar" class="secondary" onclick="exportarUbicaciones()">
+        <span style="vertical-align:middle;display:inline-block;width:1.4em;height:1.4em;">
+          <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+            <rect width="40" height="40" rx="8" fill="#217346"/>
+            <text x="10" y="28" font-family="Segoe UI,Arial" font-size="18" font-weight="bold" fill="#fff">X</text>
+          </svg>
+        </span>
+        <span id="btn-exportar-text"></span>
+      </button>
       <button id="btn-borrar" class="danger" onclick="borrarUbicacionSeleccionada()">🗑️ Borrar Seleccionada</button>
       <button id="btn-borrar-todo" class="danger" onclick="borrarTodasUbicaciones()">🧹 Borrar Todo</button>
     </div>
@@ -234,6 +280,15 @@
     <div id="historial">
       <label id="lbl-historial" for="lista">📌 Ubicaciones guardadas:</label>
       <select id="lista" size="5"></select>
+    </div>
+  </div>
+  <!-- Modal para elegir ubicación a ver en el mapa -->
+  <div id="modal-mapas">
+    <div class="modal-content">
+      <h3 id="modal-mapas-titulo">Elige ubicación a ver en el mapa</h3>
+      <select id="modal-mapas-lista"></select><br>
+      <button onclick="confirmarMapaUbicacion()" id="btn-modal-ver">Ver en mapa</button>
+      <button onclick="cerrarModalMapa()" class="cancel" id="btn-modal-cancelar">Cancelar</button>
     </div>
   </div>
   <script>
@@ -246,8 +301,8 @@
         titulo: "PuntoYa!",
         placeholder: "🔤 Nombre de la ubicación (opcional)",
         btn_guardar: "Guardar Ubicación",
-        btn_ver: "🗺️ Ver Seleccionada",
-        btn_exportar: "⬇️ Exportar a CSV",
+        btn_ver: "Ver en mapa",
+        btn_exportar: "Exportar ubicaciones a Excel",
         btn_borrar: "🗑️ Borrar Seleccionada",
         btn_borrar_todo: "🧹 Borrar Todo",
         esperando: "Esperando acción...",
@@ -268,7 +323,10 @@
         todas_eliminadas: "🧹 Todas las ubicaciones fueron eliminadas.",
         cancelada: "❎ Operación cancelada.",
         confirm_borrar_todo: "¿Estás seguro que deseas eliminar todas las ubicaciones guardadas?",
-        csv_header: "Nombre,Fecha y Hora,Latitud,Longitud\n"
+        csv_header: "Nombre,Fecha y Hora,Latitud,Longitud\n",
+        modal_titulo: "Elige ubicación a ver en el mapa",
+        modal_ver: "Ver en mapa",
+        modal_cancelar: "Cancelar"
       },
       en: {
         lang_btn_es: "Spanish",
@@ -277,8 +335,8 @@
         titulo: "PuntoYa!",
         placeholder: "🔤 Location name (optional)",
         btn_guardar: "Save Location",
-        btn_ver: "🗺️ Show Selected",
-        btn_exportar: "⬇️ Export to CSV",
+        btn_ver: "View on map",
+        btn_exportar: "Export locations to Excel",
         btn_borrar: "🗑️ Delete Selected",
         btn_borrar_todo: "🧹 Delete All",
         esperando: "Waiting for action...",
@@ -299,7 +357,10 @@
         todas_eliminadas: "🧹 All locations have been deleted.",
         cancelada: "❎ Operation canceled.",
         confirm_borrar_todo: "Are you sure you want to delete all saved locations?",
-        csv_header: "Name,Date and Time,Latitude,Longitude\n"
+        csv_header: "Name,Date and Time,Latitude,Longitude\n",
+        modal_titulo: "Select location to view on map",
+        modal_ver: "View on map",
+        modal_cancelar: "Cancel"
       }
     };
 
@@ -333,26 +394,26 @@
       localStorage.setItem("lang", lang);
       updateUrlLang(lang);
 
-      // Cambiar <title>
       document.title = texts[lang].title;
-
-      // Cambia textos de los botones de idioma y banderas
       document.getElementById("lang-es-text").innerText = texts[lang].lang_btn_es;
       document.getElementById("lang-en-text").innerText = texts[lang].lang_btn_en;
 
-      // Texto para botón Guardar con SVG
       document.getElementById("btn-guardar-text").innerText = texts[lang].btn_guardar;
+      document.getElementById("btn-ver-text").innerText = texts[lang].btn_ver;
+      document.getElementById("btn-exportar-text").innerText = texts[lang].btn_exportar;
 
       document.getElementById("titulo").innerText = texts[lang].titulo;
       document.getElementById("nombre").placeholder = texts[lang].placeholder;
-      document.getElementById("btn-ver").innerText = texts[lang].btn_ver;
-      document.getElementById("btn-exportar").innerText = texts[lang].btn_exportar;
       document.getElementById("btn-borrar").innerText = texts[lang].btn_borrar;
       document.getElementById("btn-borrar-todo").innerText = texts[lang].btn_borrar_todo;
       document.getElementById("lbl-historial").innerText = texts[lang].historial;
       document.getElementById("status").innerText = texts[lang].esperando;
 
-      // Botón activo
+      // Modal
+      document.getElementById("modal-mapas-titulo").innerText = texts[lang].modal_titulo;
+      document.getElementById("btn-modal-ver").innerText = texts[lang].modal_ver;
+      document.getElementById("btn-modal-cancelar").innerText = texts[lang].modal_cancelar;
+
       document.getElementById("btn-es").classList.toggle("active", lang === "es");
       document.getElementById("btn-en").classList.toggle("active", lang === "en");
 
@@ -361,11 +422,15 @@
     document.getElementById("btn-es").onclick = () => cambiarIdioma("es");
     document.getElementById("btn-en").onclick = () => cambiarIdioma("en");
 
-    // Asignar textos iniciales de botones de idioma (con span)
     window.onload = function() {
       document.getElementById("lang-es-text").innerText = texts[lang].lang_btn_es;
       document.getElementById("lang-en-text").innerText = texts[lang].lang_btn_en;
       document.getElementById("btn-guardar-text").innerText = texts[lang].btn_guardar;
+      document.getElementById("btn-ver-text").innerText = texts[lang].btn_ver;
+      document.getElementById("btn-exportar-text").innerText = texts[lang].btn_exportar;
+      document.getElementById("modal-mapas-titulo").innerText = texts[lang].modal_titulo;
+      document.getElementById("btn-modal-ver").innerText = texts[lang].modal_ver;
+      document.getElementById("btn-modal-cancelar").innerText = texts[lang].modal_cancelar;
       cambiarIdioma(lang);
     }
 
@@ -429,17 +494,36 @@
       });
     }
 
-    function abrirMapaSeleccionado() {
+    // NUEVO: Modal de selección de ubicación para ver en mapa
+    function abrirSelectorMapa() {
+      // Actualiza la lista del modal
       const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones")) || [];
-      const seleccion = lista.selectedIndex;
-      if (seleccion >= 0 && ubicaciones[seleccion]) {
-        const { lat, lon } = ubicaciones[seleccion];
-        const url = `https://maps.google.com/?q=${lat},${lon}`;
-        window.open(url, "_blank");
+      const listaModal = document.getElementById("modal-mapas-lista");
+      listaModal.innerHTML = "";
+      if(ubicaciones.length === 0){
+        const opt = document.createElement("option");
+        opt.text = (lang === "es") ? "Sin ubicaciones guardadas" : "No locations saved";
+        listaModal.appendChild(opt);
       } else {
-        status.innerText = texts[lang].error_selecciona_ubicacion;
-        status.style.background = "#fef2f2";
-        status.style.color = "#b91c1c";
+        ubicaciones.forEach((u, i) => {
+          const opt = document.createElement("option");
+          opt.value = i;
+          opt.text = `${u.nombre} | ${u.fecha} - ${u.lat},${u.lon}`;
+          listaModal.appendChild(opt);
+        });
+      }
+      document.getElementById("modal-mapas").style.display = "block";
+    }
+    function cerrarModalMapa() {
+      document.getElementById("modal-mapas").style.display = "none";
+    }
+    function confirmarMapaUbicacion() {
+      const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones")) || [];
+      const idx = document.getElementById("modal-mapas-lista").value;
+      if (ubicaciones[idx]) {
+        const { lat, lon } = ubicaciones[idx];
+        window.open(`https://maps.google.com/?q=${lat},${lon}`, "_blank");
+        cerrarModalMapa();
       }
     }
 
