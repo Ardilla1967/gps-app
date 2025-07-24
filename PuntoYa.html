@@ -12,6 +12,8 @@
       --white: #ffffff;
       --gray: #f1f5f9;
       --bg: #0f1bb3;
+      --blue-light: rgb(115, 251, 253);
+      --green-light: rgb(117, 250, 97);
       --radius: 16px;
     }
     body {
@@ -45,6 +47,9 @@
       border-radius: 12px;
       font-weight: bold;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
     .container {
       background-color: var(--white);
@@ -80,8 +85,8 @@
       cursor: pointer;
     }
     .guardar {
-      background-color: var(--danger);
-      color: var(--white);
+      background-color: var(--blue-light);
+      color: var(--primary);
     }
     .mapa {
       background-color: var(--white);
@@ -114,20 +119,55 @@
     .guardadas {
       color: var(--danger);
     }
+    #modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.4);
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+    .modal-content {
+      background: white;
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      width: 90%;
+      max-width: 300px;
+    }
+    .modal-content select, .modal-content button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      font-size: 1em;
+      border-radius: 12px;
+    }
+    .modal-content button:nth-child(3) {
+      background: var(--yellow);
+      border: none;
+      font-weight: bold;
+    }
+    .modal-content button:nth-child(4) {
+      background: #f3f3f3;
+      border: none;
+    }
   </style>
 </head>
 <body>
   <div class="logo">PUNTO<span>YA!</span></div>
   <div class="lang-selector">
-    <button>ES</button>
-    <button>EN</button>
+    <button onclick="setLang('es')">🇪🇸 ES</button>
+    <button onclick="setLang('en')">🇺🇸 EN</button>
   </div>
   <div class="container">
     <input type="text" id="nombre" placeholder="Nombre de la ubicación (opciona/)" />
 
     <div class="grid-buttons">
-      <button class="guardar" onclick="guardarUbicacion()">📍 Guardar ubicación</button>
-      <button class="mapa" onclick="verEnMapa()">🗺️ Ver en mapa</button>
+      <button id="btn-guardar" class="guardar" onclick="guardarUbicacion()">📍 Guardar ubicación</button>
+      <button class="mapa" onclick="abrirModal()">🗺️ Ver en mapa</button>
     </div>
 
     <div class="grid-buttons">
@@ -135,14 +175,30 @@
       <button class="borrar" onclick="borrarUbicaciones()">📌 Borrar todo</button>
     </div>
 
-    <div class="guardado" id="mensaje-status">✅ Ubicación guardada</div>
-    <div class="guardadas">📍 Ubicaciones guardadas</div>
+    <div class="guardado" id="mensaje-status">Esperando acción...</div>
+    <div class="guardadas" id="lista-resumen">📍 Ubicaciones guardadas: 0</div>
+  </div>
+
+  <div id="modal">
+    <div class="modal-content">
+      <h3>Elige ubicación a ver en en mapa</h3>
+      <select id="selector-ubicaciones"></select>
+      <button onclick="verSeleccionadaEnMapa()">Ver en mapa</button>
+      <button onclick="cerrarModal()">Cancelar</button>
+    </div>
   </div>
 
   <script>
+    let lang = 'es';
+
+    function setLang(l) {
+      lang = l;
+      alert(`Idioma cambiado a: ${l === 'es' ? 'Español' : 'Inglés'}`);
+    }
+
     function guardarUbicacion() {
       if (!navigator.geolocation) {
-        alert("Geolocalización no soportada por el navegador.");
+        alert("Geolocalización no soportada.");
         return;
       }
       navigator.geolocation.getCurrentPosition(function(pos) {
@@ -155,25 +211,23 @@
         localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
         document.getElementById("mensaje-status").innerText = `✅ Guardado: ${nombre}`;
         document.getElementById("nombre").value = "";
-      }, function(error) {
-        alert("Error al obtener la ubicación: " + error.message);
+        document.getElementById("btn-guardar").style.backgroundColor = 'rgb(117,250,97)';
+        actualizarResumen();
+      }, function(err) {
+        alert("Error al obtener ubicación: " + err.message);
       });
     }
 
-    function verEnMapa() {
+    function actualizarResumen() {
       const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
-      if (ubicaciones.length === 0) return alert("No hay ubicaciones guardadas.");
-      const ultima = ubicaciones[ubicaciones.length - 1];
-      window.open(`https://maps.google.com/?q=${ultima.lat},${ultima.lon}`, "_blank");
+      document.getElementById("lista-resumen").innerText = `📍 Ubicaciones guardadas: ${ubicaciones.length}`;
     }
 
     function exportarUbicaciones() {
       const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
-      if (ubicaciones.length === 0) return alert("No hay ubicaciones para exportar.");
+      if (ubicaciones.length === 0) return alert("No hay ubicaciones.");
       let csv = "Nombre,Fecha,Latitud,Longitud\n";
-      ubicaciones.forEach(u => {
-        csv += `${u.nombre},${u.fecha},${u.lat},${u.lon}\n`;
-      });
+      ubicaciones.forEach(u => csv += `${u.nombre},${u.fecha},${u.lat},${u.lon}\n`);
       const blob = new Blob([csv], { type: "text/csv" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
@@ -182,11 +236,47 @@
     }
 
     function borrarUbicaciones() {
-      if (confirm("¿Deseas borrar todas las ubicaciones guardadas?")) {
+      if (confirm("¿Borrar todas las ubicaciones?")) {
         localStorage.removeItem("ubicaciones");
-        document.getElementById("mensaje-status").innerText = "🧹 Todas las ubicaciones eliminadas.";
+        document.getElementById("mensaje-status").innerText = "🧹 Todo eliminado.";
+        actualizarResumen();
       }
     }
+
+    function abrirModal() {
+      const selector = document.getElementById("selector-ubicaciones");
+      selector.innerHTML = "";
+      const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+      if (ubicaciones.length === 0) {
+        const opt = document.createElement("option");
+        opt.text = "No hay ubicaciones";
+        selector.appendChild(opt);
+      } else {
+        ubicaciones.forEach((u, i) => {
+          const opt = document.createElement("option");
+          opt.value = i;
+          opt.text = `${u.nombre} | ${u.lat},${u.lon}`;
+          selector.appendChild(opt);
+        });
+      }
+      document.getElementById("modal").style.display = "flex";
+    }
+
+    function cerrarModal() {
+      document.getElementById("modal").style.display = "none";
+    }
+
+    function verSeleccionadaEnMapa() {
+      const idx = document.getElementById("selector-ubicaciones").value;
+      const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+      if (ubicaciones[idx]) {
+        const { lat, lon } = ubicaciones[idx];
+        window.open(`https://maps.google.com/?q=${lat},${lon}`, "_blank");
+        cerrarModal();
+      }
+    }
+
+    window.onload = actualizarResumen;
   </script>
 </body>
 </html>
