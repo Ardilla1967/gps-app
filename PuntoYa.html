@@ -176,7 +176,6 @@
       color: #444;
       border: none;
     }
-    /* Botón verde claro en el modal de mapa */
     #btn-ver {
       background: var(--map-btn-bg) !important;
       color: #222 !important;
@@ -406,13 +405,12 @@
       navigator.geolocation.getCurrentPosition(function(pos) {
         let nombre = document.getElementById("nombre").value.trim();
         if (!nombre) nombre = (lang === 'es') ? "(sin nombre)" : "(unnamed)";
-        const ahora = new Date();
-        const fecha = ahora.toLocaleDateString();
-        const hora = ahora.toLocaleTimeString();
+        // Guardar fecha y hora juntos como string único
+        const fecha = new Date().toLocaleString();
         const lat = pos.coords.latitude.toFixed(6);
         const lon = pos.coords.longitude.toFixed(6);
         const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
-        ubicaciones.push({ nombre, fecha, hora, lat, lon });
+        ubicaciones.push({ nombre, fecha, lat, lon });
         localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
         document.getElementById("mensaje-status").innerText = textos[lang].guardado(nombre);
         document.getElementById("nombre").value = "";
@@ -431,11 +429,10 @@
     function exportarUbicaciones() {
       const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
       if (ubicaciones.length === 0) return alert(textos[lang].no_hay);
-      let csv = "nombre,fecha,hora,latitud,longitud\n";
+      let csv = "nombre,fecha,latitud,longitud\n";
       ubicaciones.forEach(u => {
-        // retrocompatibilidad con ubicaciones viejas (sin campo hora)
-        let h = u.hora ? u.hora : '';
-        csv += `"${u.nombre}","${u.fecha}","${h}","${u.lat}","${u.lon}"\n`;
+        // fecha ya contiene fecha y hora juntos
+        csv += `"${u.nombre}","${u.fecha}","${u.lat}","${u.lon}"\n`;
       });
       const blob = new Blob([csv], { type: "text/csv" });
       const a = document.createElement("a");
