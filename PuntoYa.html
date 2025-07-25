@@ -246,12 +246,21 @@
     </div>
 
     <div class="grid-buttons">
-      <button class="exportar" onclick="exportarUbicaciones()">📊 <span id="exportar-txt"></span></button>
+      <button class="exportar" onclick="exportarUbicaciones()">
+  <img src="excel-icon.png" alt="Excel" style="height: 1.4em; vertical-align: middle;" />
+  <span id="exportar-txt"></span>
+</button>
+
       <button class="borrar" onclick="abrirModalBorrar()">🗑️ <span id="borrar-txt"></span></button>
     </div>
 
     <div class="guardado" id="mensaje-status">Esperando acción...</div>
-    <div class="guardadas" id="lista-resumen">📍 Ubicaciones guardadas: 0</div>
+    <div class="guardadas" id="lista-resumen">
+      <img src="Mis-ubicaciones-icon.png" style="height: 60px;" />
+  <img src="Mis-ubicaciones-icon.png" alt="Mis ubicaciones" style="height: 1.4em; margin-right: 6px; vertical-align: middle;" />
+   Ubicaciones guardadas: 0
+</div>
+
   </div>
 
   <!-- Modal de ver en mapa -->
@@ -308,7 +317,7 @@
         exportar: "Exportar a Excel",
         borrar: "Borrar ubicaciones",
         status_inicio: "Esperando acción...",
-        resumen: n => `📍 Ubicaciones guardadas: ${n}`,
+        resumen: n => `<img src="Mis-ubicaciones-icon.png" alt="Mis ubicaciones" style="height: 1.4em; margin-right: 6px; vertical-align: middle;" /> Mis Ubicaciones Guardadas: ${n}`,
         modal_titulo: "Elige ubicación a ver en el mapa",
         modal_ver: "Ir a Mapa",
         modal_cancelar: "Cancelar",
@@ -424,7 +433,7 @@
 
     function actualizarResumen() {
       const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
-      document.getElementById("lista-resumen").innerText = textos[lang].resumen(ubicaciones.length);
+      document.getElementById("lista-resumen").innerHTML = textos[lang].resumen(ubicaciones.length);
     }
 
     function exportarUbicaciones() {
