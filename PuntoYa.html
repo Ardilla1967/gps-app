@@ -11,7 +11,8 @@
       --yellow: #ffde59;
       --white: #ffffff;
       --gray: #f1f5f9;
-      --bg: #0f1bb3;
+      --bg: rgb(50,130,246);
+
       --blue-light: rgb(115, 251, 253);
       --green-light: rgb(117, 250, 97);
       --radius: 16px;
@@ -62,6 +63,7 @@
       flex-direction: column;
       align-items: center;
       gap: 12px;
+      margin-top: 16px;
     }
     input[type="text"] {
       width: 100%;
@@ -221,8 +223,7 @@
     <button onclick="setLang('en')">🇬🇧 EN</button>
   </div>
   <div class="container">
-    <input type="text" id="nombre" placeholder="Nombre la Actual Ubicación (opcional)" />
-
+    <input type="text" id="nombre" placeholder="Nombrar la Actual Ubicación (opcional)" />
     <div class="grid-buttons">
       <button id="btn-guardar" class="guardar" onclick="preGuardarUbicacion()">
         <span style="display:inline-block;vertical-align:middle;width:1.2em;height:1.2em;">
@@ -301,7 +302,7 @@
 
     const textos = {
       es: {
-        placeholder: "Nombre la Actual Ubicación (opcional)",
+        placeholder: "Nombrar la Actual Ubicación (opcional)",
         guardar: "Guardar ubicación",
         ver: "Ver en mapa",
         exportar: "Exportar a Excel",
