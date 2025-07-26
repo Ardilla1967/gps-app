@@ -18,6 +18,9 @@
       --radius: 16px;
       --map-btn-bg: rgb(161, 251, 142);
     }
+    .lang-selector button.selected {
+  background-color: rgb(135,237,237) !important;
+}
     body {
       background-color: var(--bg);
       font-family: 'Segoe UI', sans-serif;
@@ -226,10 +229,11 @@
 
 
 
-  <div class="lang-selector">
-    <button onclick="setLang('es')">🇪🇸 ES</button>
-    <button onclick="setLang('en')">🇬🇧 EN</button>
-  </div>
+ <div class="lang-selector">
+  <button id="btn-es" data-lang="es" onclick="setLang('es')">🇪🇸 ES</button>
+  <button id="btn-en" data-lang="en" onclick="setLang('en')">🇬🇧 EN</button>
+</div>
+
   <div class="container">
     <input type="text" id="nombre" placeholder="Nombrar la Actual Ubicación (opcional)" />
     <div class="grid-buttons">
@@ -395,11 +399,23 @@
       actualizarResumen();
     }
 
-    function setLang(nuevo) {
-      lang = nuevo;
-      localStorage.setItem("lang", lang);
-      aplicarTraduccion();
+ function setLang(nuevo) {
+  lang = nuevo;
+  localStorage.setItem("lang", lang);
+  aplicarTraduccion();
+
+  // —–––––––––––––––––––––––––––––––––
+  // Aquí marcamos el botón activo y des­marcamos el otro
+  document.querySelectorAll('.lang-selector button').forEach(btn => {
+    // btn.dataset.lang será "es" o "en"
+    if (btn.dataset.lang === lang) {
+      btn.classList.add('selected');
+    } else {
+      btn.classList.remove('selected');
     }
+  });
+  // —–––––––––––––––––––––––––––––––––
+} 
 
     // Modal guardar sin nombre
     function preGuardarUbicacion() {
@@ -548,7 +564,14 @@
       }
     }
 
-    window.onload = aplicarTraduccion;
+  window.onload = () => {
+  aplicarTraduccion();
+  // Marca el botón activo al cargar
+  document.querySelectorAll('.lang-selector button').forEach(btn => {
+    if (btn.dataset.lang === lang) btn.classList.add('selected');
+  });
+};
+
   </script>
 </body>
 </html>
