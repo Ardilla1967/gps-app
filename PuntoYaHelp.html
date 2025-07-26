@@ -680,31 +680,49 @@ btnAgregar.addEventListener('click', () => {
 });
 
 // Enviar ubicación al contacto seleccionado
-btnEnviar.addEventListener('click', () => {
+btnEnviar.addEventListener('click', async () => {
   const sel = selectContactos.value;
   if (sel === "" || sel == null) {
     return alert('Selecciona primero un contacto.');
   }
   const contacto = contactos[parseInt(sel)];
-  const telefono = contacto.tel.replace(/\D/g,'');
+  const telefono = contacto.tel.replace(/\D/g, '');
 
   if (!navigator.geolocation) {
     return alert('Geolocalización no soportada.');
   }
-  navigator.geolocation.getCurrentPosition(pos => {
+
+  // Deshabilita el botón mientras obtiene coords
+  btnEnviar.disabled = true;
+
+  try {
+    // Obtiene posición con promesas
+    const pos = await new Promise((resolve, reject) => 
+      navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true })
+    );
+
     const { latitude, longitude } = pos.coords;
     const mensaje = encodeURIComponent(
       `¡Hola ${contacto.name}! Mi ubicación: https://maps.google.com/?q=${latitude},${longitude}`
     );
-    window.open(`https://wa.me/${telefono}?text=${mensaje}`, '_blank');
-  }, err => {
+
+    // URL de WhatsApp (web o app móvil)
+    const url = `https://api.whatsapp.com/send?phone=${telefono}&text=${mensaje}`;
+
+    // Redirige para abrir WhatsApp
+    window.location.href = url;
+
+  } catch (err) {
     alert('Error al obtener ubicación: ' + err.message);
-  });
+  } finally {
+    btnEnviar.disabled = false;
+  }
 });
+
 
 // Inicialización al cargar la página
 window.addEventListener('load', () => {
-  renderContactos();
+  renderContactos();    
   // … tu init de idiomas, etc.
 });
 
