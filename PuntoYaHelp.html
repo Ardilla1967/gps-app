@@ -305,16 +305,22 @@
 </button>
 
 <!-- Sub‑menú Compartir (oculto por defecto) -->
-<div id="submenu-comparte" style="display:none; background:var(--white); border-radius:var(--radius); padding:16px; margin-top:12px; width:90%; max-width:340px;">
+<!-- Sub‑menú Compartir -->
+<div id="submenu-comparte" style="display:none; background:var(--white); border-radius:var(--radius); padding:16px; margin-top:12px; width:90%; max-width:340px; flex-direction:column;">
   <h4>Contactos para compartir</h4>
   <div id="lista-contactos"></div>
-  <button id="btn-agregar-contacto">+ Agregar número</button>
+  <button id="btn-agregar-contacto">+ Agregar contacto</button>
   <hr/>
+  <label for="select-contactos">Elige un contacto:</label>
+  <select id="select-contactos" style="width:100%; padding:8px; margin:8px 0; border-radius:var(--radius); border:1px solid var(--gray);">
+    <option value="" disabled selected>— ninguno —</option>
+  </select>
   <button id="btn-enviar-ubicacion" class="guardar">
     <img src="whatsapp-icon.png" alt="WhatsApp" style="height:1.2em; margin-right:6px;" />
     Enviar ubicación
   </button>
 </div>
+
 
   </div>
 
@@ -603,84 +609,105 @@
       }
     }
 // --- Constantes y estado ---
+// Máximo contactos
 const MAX_CONTACTOS = 5;
+// Ahora cada contacto es un objeto { name, tel }
 let contactos = JSON.parse(localStorage.getItem('contactos') || '[]');
 
-// --- Referencias DOM ---
-const btnComparte = document.getElementById('btn-comparte');
-const submenu = document.getElementById('submenu-comparte');
-const listaDiv = document.getElementById('lista-contactos');
-const btnAgregar = document.getElementById('btn-agregar-contacto');
-const btnEnviar = document.getElementById('btn-enviar-ubicacion');
+// DOM
+const btnComparte     = document.getElementById('btn-comparte');
+const submenu         = document.getElementById('submenu-comparte');
+const listaDiv        = document.getElementById('lista-contactos');
+const btnAgregar      = document.getElementById('btn-agregar-contacto');
+const selectContactos = document.getElementById('select-contactos');
+const btnEnviar       = document.getElementById('btn-enviar-ubicacion');
 
-// --- Funciones auxiliares ---
+// Guarda en localStorage y vuelve a dibujar
 function guardarContactos() {
   localStorage.setItem('contactos', JSON.stringify(contactos));
   renderContactos();
 }
 
+// Dibuja lista + opciones del select
 function renderContactos() {
+  // 1) Lista con “x” para borrar
   listaDiv.innerHTML = '';
-  contactos.forEach((tel, idx) => {
+  contactos.forEach((c, idx) => {
     const div = document.createElement('div');
     div.className = 'contacto-item';
     div.innerHTML = `
-      <span>${tel}</span>
+      <span><strong>${c.name}</strong><br/><small>${c.tel}</small></span>
       <button title="Eliminar" onclick="eliminarContacto(${idx})">&times;</button>
     `;
     listaDiv.appendChild(div);
   });
+
+  // 2) Poblamos el <select>
+  selectContactos.innerHTML = '<option value="" disabled selected>— ninguno —</option>';
+  contactos.forEach((c, idx) => {
+    const opt = document.createElement('option');
+    opt.value = idx;
+    opt.text = `${c.name} (${c.tel})`;
+    selectContactos.appendChild(opt);
+  });
+
+  // 3) Control de máximo
   btnAgregar.disabled = contactos.length >= MAX_CONTACTOS;
 }
 
+// Eliminar
 window.eliminarContacto = function(idx) {
   contactos.splice(idx, 1);
   guardarContactos();
 };
 
-// --- Eventos ---
+// Mostrar/ocultar sub‑menú
 btnComparte.addEventListener('click', () => {
   submenu.style.display = submenu.style.display === 'none' ? 'flex' : 'none';
-  submenu.style.flexDirection = 'column';
 });
 
+// Agregar nuevo: pedimos nombre y luego número
 btnAgregar.addEventListener('click', () => {
   if (contactos.length >= MAX_CONTACTOS) return;
-  const nuevo = prompt('Ingresa número (incluye código país, p.ej. +56912345678):');
-  if (nuevo && /^\+\d{7,15}$/.test(nuevo.trim())) {
-    contactos.push(nuevo.trim());
-    guardarContactos();
-  } else {
-    alert('Formato inválido. Ejemplo: +56912345678');
+  const nombre = prompt('Ingresa un nombre para el contacto:').trim();
+  if (!nombre) return alert('El nombre no puede estar vacío.');
+  const tel = prompt('Ingresa número (ej. +56912345678):').trim();
+  if (!/^\+\d{7,15}$/.test(tel)) {
+    return alert('Formato de teléfono inválido. Usa + seguido de 7–15 dígitos.');
   }
+  contactos.push({ name: nombre, tel: tel });
+  guardarContactos();
 });
 
+// Enviar ubicación al contacto seleccionado
 btnEnviar.addEventListener('click', () => {
-  if (!navigator.geolocation) return alert('Geolocalización no soportada.');
-  if (contactos.length === 0) return alert('No hay contactos para compartir.');
-  
-  // Elegir contacto
-  let opciones = contactos.map((t,i) => `${i+1}. ${t}`).join('\n');
-  let sel = prompt(`Selecciona destinatario:\n${opciones}`);
-  let idx = parseInt(sel) - 1;
-  if (isNaN(idx) || idx < 0 || idx >= contactos.length) return;
+  const sel = selectContactos.value;
+  if (sel === "" || sel == null) {
+    return alert('Selecciona primero un contacto.');
+  }
+  const contacto = contactos[parseInt(sel)];
+  const telefono = contacto.tel.replace(/\D/g,'');
 
-  // Obtener ubicación y abrir WhatsApp
+  if (!navigator.geolocation) {
+    return alert('Geolocalización no soportada.');
+  }
   navigator.geolocation.getCurrentPosition(pos => {
     const { latitude, longitude } = pos.coords;
-    const mensaje = encodeURIComponent(`¡Hola! Mi ubicación: https://maps.google.com/?q=${latitude},${longitude}`);
-    const telefono = contactos[idx].replace(/\D/g,''); // solo dígitos
+    const mensaje = encodeURIComponent(
+      `¡Hola ${contacto.name}! Mi ubicación: https://maps.google.com/?q=${latitude},${longitude}`
+    );
     window.open(`https://wa.me/${telefono}?text=${mensaje}`, '_blank');
   }, err => {
     alert('Error al obtener ubicación: ' + err.message);
   });
 });
 
-// --- Inicialización al cargar ---
+// Inicialización al cargar la página
 window.addEventListener('load', () => {
   renderContactos();
-  // (… tu código existente de traducción, etc.)
+  // … tu init de idiomas, etc.
 });
+
 
   window.onload = () => {
   aplicarTraduccion();
