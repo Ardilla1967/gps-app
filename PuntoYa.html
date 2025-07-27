@@ -531,38 +531,54 @@
     }
 
     // MODAL MAPA
-    function abrirModal() {
-      const selector = document.getElementById("selector-ubicaciones");
-      selector.innerHTML = "";
-      const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
-      if (ubicaciones.length === 0) {
-        const opt = document.createElement("option");
-        opt.text = textos[lang].no_hay;
-        selector.appendChild(opt);
-      } else {
-        ubicaciones.forEach((u, i) => {
-          const opt = document.createElement("option");
-          opt.value = i;
-          opt.text = `${u.nombre} | ${u.lat},${u.lon}`;
-          selector.appendChild(opt);
-        });
-      }
-      document.getElementById("modal").style.display = "flex";
-    }
+  function abrirModal() {
+  const selector = document.getElementById("selector-ubicaciones");
+  selector.innerHTML = "";
+
+  const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+
+  const placeholder = document.createElement("option");
+  placeholder.text = (lang === 'es') ? "— Elegir ubicación a mostrar —" : "— Select location to show —";
+  placeholder.disabled = true;
+  placeholder.selected = true;
+  selector.appendChild(placeholder);
+
+  if (ubicaciones.length === 0) {
+    const opt = document.createElement("option");
+    opt.text = textos[lang].no_hay;
+    opt.disabled = true;
+    selector.appendChild(opt);
+  } else {
+    ubicaciones.forEach((u, i) => {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.text = `${u.nombre} | ${u.lat},${u.lon}`;
+      selector.appendChild(opt);
+    });
+  }
+
+  document.getElementById("modal").style.display = "flex";
+}
+
 
     function cerrarModal() {
       document.getElementById("modal").style.display = "none";
     }
 
-    function verSeleccionadaEnMapa() {
-      const idx = document.getElementById("selector-ubicaciones").value;
-      const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
-      if (ubicaciones[idx]) {
-        const { lat, lon } = ubicaciones[idx];
-        window.open(`https://maps.google.com/?q=${lat},${lon}`, "_blank");
-        cerrarModal();
-      }
-    }
+function verSeleccionadaEnMapa() {
+  const idx = document.getElementById("selector-ubicaciones").value;
+  const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+
+  if (idx === "" || ubicaciones[idx] === undefined) {
+    alert((lang === 'es') ? "Por favor selecciona una ubicación válida." : "Please select a valid location.");
+    return;
+  }
+
+  const { lat, lon } = ubicaciones[idx];
+  window.open(`https://maps.google.com/?q=${lat},${lon}`, "_blank");
+  cerrarModal();
+}
+
 
   window.onload = () => {
   aplicarTraduccion();
