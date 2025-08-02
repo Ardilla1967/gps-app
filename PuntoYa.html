@@ -269,6 +269,12 @@
   <span id="borrar-txt"></span>
 </button>
 
+<button class="guardar" onclick="iniciarNavegacion()" style="background-color: var(--green-light);">
+  <img src="Flecha.png" style="height: 1.2em; vertical-align: middle;" />
+  <span>Navegar al punto</span>
+</button>
+
+
     </div>
 
     <div class="guardado" id="mensaje-status">Esperando acción...</div>
@@ -277,17 +283,32 @@
   <img src="Mis-ubicaciones-icon.png" alt="Mis ubicaciones" style="height: 1.4em; margin-right: 6px; vertical-align: middle;" />
    Ubicaciones guardadas: 0
 </div>
+<!-- Indicador de dirección -->
+<div id="indicador-direccion" style="display: none; flex-direction: column; align-items: center; margin-top: 20px;">
+  <img id="flecha" src="Flecha.png" style="height: 60px; transition: transform 0.3s ease;" />
+  <div id="distancia-info" style="color: white; font-size: 1.1em; margin-top: 8px;">Distancia: 0 m</div>
+</div>
+
 
   </div>
 
   <!-- Modal de ver en mapa -->
   <div id="modal">
     <div class="modal-content">
-      <h3 id="modal-title">Elige ubicación a ver en el mapa</h3>
-      <select id="selector-ubicaciones"></select>
-      <button onclick="verSeleccionadaEnMapa()" id="btn-ver">Ir a Mapa</button>
-      <button onclick="cerrarModal()" id="btn-cancelar">Cancelar</button>
-    </div>
+  <h3 id="modal-title">Elige ubicación a ver en el mapa</h3>
+  <select id="selector-ubicaciones"></select>
+  
+  <button onclick="verSeleccionadaEnMapa()" id="btn-ver">Ir a Mapa</button>
+
+  <!-- 📌 Este es el nuevo botón -->
+  <button onclick="iniciarNavegacionSeleccionada()" id="btn-ir-navegacion"
+    style="background: var(--green-light); color: #111; font-weight: bold;">
+    Navegar a Punto
+  </button>
+
+  <button onclick="cerrarModal()" id="btn-cancelar">Cancelar</button>
+</div>
+
   </div>
 
   <!-- Modal de borrado -->
@@ -309,6 +330,7 @@
       <select id="selector-borrar-ubicacion" multiple></select>
       <button onclick="borrarMultiplesSeleccionadas()" id="btn-borrar-una" class="confirm">Borrar</button>
       <button onclick="cerrarModalBorrarSeleccion()" id="btn-borrar-cancelar2" class="cancel">Cancelar</button>
+      
     </div>
   </div>
 
@@ -322,6 +344,12 @@
       </div>
     </div>
   </div>
+
+<!-- Indicador de dirección -->
+<div id="indicador-direccion" style="display: none; flex-direction: column; align-items: center; margin-top: 20px;">
+  <img id="flecha" src="Flecha.png" style="height: 60px; transition: transform 0.3s ease;" />
+  <div id="distancia-info" style="color: white; font-size: 1.1em; margin-top: 8px;">Distancia: 0 m</div>
+</div>
 
   <script>
     let lang = localStorage.getItem("lang") || 'es';
@@ -588,6 +616,68 @@ function verSeleccionadaEnMapa() {
     if (btn.dataset.lang === lang) btn.classList.add('selected');
   });
 };
+let objetivo = null;
+let watcherId = null;
+
+function iniciarNavegacion() {
+  const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+  if (ubicaciones.length === 0) {
+    alert((lang === 'es') ? "No hay ubicaciones guardadas." : "No saved locations.");
+    return;
+  }
+
+  objetivo = ubicaciones[ubicaciones.length - 1]; // último guardado
+  document.getElementById("indicador-direccion").style.display = "flex";
+
+  if (watcherId) navigator.geolocation.clearWatch(watcherId);
+  watcherId = navigator.geolocation.watchPosition(actualizarNavegacion, err => {
+    alert("No se pudo acceder a la geolocalización.");
+  }, { enableHighAccuracy: true });
+}
+
+function actualizarNavegacion(pos) {
+  const lat1 = pos.coords.latitude * Math.PI / 180;
+  const lon1 = pos.coords.longitude * Math.PI / 180;
+  const lat2 = parseFloat(objetivo.lat) * Math.PI / 180;
+  const lon2 = parseFloat(objetivo.lon) * Math.PI / 180;
+
+  const dlat = lat2 - lat1;
+  const dlon = lon2 - lon1;
+
+  // Distancia Haversine
+  const a = Math.sin(dlat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dlon/2)**2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distancia = 6371000 * c; // en metros
+  document.getElementById("distancia-info").innerText = `Distancia: ${Math.round(distancia)} m`;
+
+  // Dirección
+  const y = Math.sin(dlon) * Math.cos(lat2);
+  const x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2)*Math.cos(dlon);
+  let brujula = Math.atan2(y, x) * 180 / Math.PI;
+  brujula = (brujula + 360) % 360;
+
+  // Aplica rotación a la flecha
+  document.getElementById("flecha").style.transform = `rotate(${brujula}deg)`;
+}
+function iniciarNavegacionSeleccionada() {
+  const idx = document.getElementById("selector-ubicaciones").value;
+  const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+
+  if (idx === "" || ubicaciones[idx] === undefined) {
+    alert((lang === 'es') ? "Por favor selecciona una ubicación válida." : "Please select a valid location.");
+    return;
+  }
+
+  objetivo = ubicaciones[idx]; // Punto destino
+  document.getElementById("indicador-direccion").style.display = "flex";
+
+  cerrarModal();
+
+  if (watcherId) navigator.geolocation.clearWatch(watcherId);
+  watcherId = navigator.geolocation.watchPosition(actualizarNavegacion, err => {
+    alert("No se pudo acceder a la geolocalización.");
+  }, { enableHighAccuracy: true });
+}
 
   </script>
 </body>
