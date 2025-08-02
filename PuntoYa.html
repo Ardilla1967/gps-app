@@ -7,7 +7,7 @@
   <style>
     :root {
       --primary: #1800ad;
-      --danger: #ff3131;
+      --danger: #f76334;
       --yellow: #ffde59;
       --white: #ffffff;
       --gray: #f1f5f9;
@@ -67,6 +67,7 @@
       align-items: center;
       gap: 12px;
       margin-top: 16px;
+      
     }
     input[type="text"] {
       width: 100%;
@@ -232,6 +233,7 @@
  <div class="lang-selector">
   <button id="btn-es" data-lang="es" onclick="setLang('es')">🇪🇸 ES</button>
   <button id="btn-en" data-lang="en" onclick="setLang('en')">🇬🇧 EN</button>
+  
 </div>
 
   <div class="container">
@@ -269,6 +271,20 @@
 </button>
 
     </div>
+<div class="grid-buttons">
+  <button class="exportar" onclick="exportarUbicaciones()">
+    ...
+  </button>
+
+  <button class="borrar" onclick="abrirModalBorrar()">
+    ...
+  </button>
+</div>
+
+<!-- 🔄 Nuevo botón aquí -->
+<button class="guardar" onclick="abrirModalVolver()" style="background-color:#fffbc1;color:#333; width: 100%; margin-top: 12px;">
+  🔄 Volver a punto
+</button>
 
     <div class="guardado" id="mensaje-status">Esperando acción...</div>
     <div class="guardadas" id="lista-resumen">
@@ -321,6 +337,17 @@
       </div>
     </div>
   </div>
+<div id="modal-volver" style="display:none; position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:12;justify-content:center;align-items:center;background:rgba(0,0,0,0.4);">
+  <div class="modal-content" style="text-align:left;">
+    <h3>Volver a ubicación</h3>
+    <select id="selector-volver-ubicacion" style="width:100%;margin-bottom:12px;"></select>
+    <div id="info-direccion">
+      <p>Distancia: <span id="distancia"></span></p>
+      <p>Dirección: <span id="direccion"></span></p>
+    </div>
+    <button onclick="cerrarModalVolver()" class="cancel">Cerrar</button>
+  </div>
+</div>
 
   <script>
     let lang = localStorage.getItem("lang") || 'es';
@@ -573,6 +600,75 @@ function verSeleccionadaEnMapa() {
     alert((lang === 'es') ? "Por favor selecciona una ubicación válida." : "Please select a valid location.");
     return;
   }
+function abrirModalVolver() {
+  const selector = document.getElementById("selector-volver-ubicacion");
+  selector.innerHTML = "";
+
+  const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+
+  if (ubicaciones.length === 0) {
+    const opt = document.createElement("option");
+    opt.text = textos[lang].no_hay;
+    opt.disabled = true;
+    selector.appendChild(opt);
+  } else {
+    ubicaciones.forEach((u, i) => {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.text = `${u.nombre} | ${u.lat},${u.lon}`;
+      selector.appendChild(opt);
+    });
+
+    selector.onchange = () => actualizarDistanciaDireccion(ubicaciones[selector.value]);
+    selector.selectedIndex = 0;
+    actualizarDistanciaDireccion(ubicaciones[0]);
+  }
+
+  document.getElementById("modal-volver").style.display = "flex";
+}
+
+function cerrarModalVolver() {
+  document.getElementById("modal-volver").style.display = "none";
+}
+
+function actualizarDistanciaDireccion(destino) {
+  if (!navigator.geolocation) {
+    alert("Geolocalización no soportada.");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(pos => {
+    const lat1 = pos.coords.latitude * Math.PI / 180;
+    const lon1 = pos.coords.longitude * Math.PI / 180;
+    const lat2 = parseFloat(destino.lat) * Math.PI / 180;
+    const lon2 = parseFloat(destino.lon) * Math.PI / 180;
+
+    const dlat = lat2 - lat1;
+    const dlon = lon2 - lon1;
+
+    // Distancia Haversine
+    const R = 6371e3; // Radio Tierra en metros
+    const a = Math.sin(dlat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dlon/2)**2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distancia = Math.round(R * c);
+
+    // Dirección (bearing)
+    const y = Math.sin(dlon) * Math.cos(lat2);
+    const x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2)*Math.cos(dlon);
+    const brng = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+
+    const direccionCardinal = obtenerDireccionCardinal(brng);
+
+    document.getElementById("distancia").innerText = distancia + " metros";
+    document.getElementById("direccion").innerText = direccionCardinal;
+  });
+}
+
+function obtenerDireccionCardinal(grados) {
+  const dirs = ['Norte', 'Noreste', 'Este', 'Sureste', 'Sur', 'Suroeste', 'Oeste', 'Noroeste'];
+  const i = Math.round(grados / 45) % 8;
+  return dirs[i];
+}
 
   const { lat, lon } = ubicaciones[idx];
   window.open(`https://maps.google.com/?q=${lat},${lon}`, "_blank");
