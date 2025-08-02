@@ -12,24 +12,22 @@
       --white: #ffffff;
       --gray: #f1f5f9;
       --bg: rgb(50,130,246);
-
       --blue-light: rgb(115, 251, 253);
       --green-light: rgb(117, 250, 97);
       --radius: 16px;
       --map-btn-bg: rgb(161, 251, 142);
     }
-    .lang-selector button.selected {
-  background-color: rgb(135,237,237) !important;
-}
-    body {
-      background-color: var(--bg);
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    #brujula-container {
+      text-align: center;
+      margin-top: 10px;
     }
+    #brujula {
+      height: 60px;
+      transition: transform 0.2s ease;
+    }
+  </style>
+</head>
+<body>
     .logo {
       margin: 24px auto 8px auto;
       font-size: 1.8em;
@@ -337,17 +335,22 @@
       </div>
     </div>
   </div>
-<div id="modal-volver" style="display:none; position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:12;justify-content:center;align-items:center;background:rgba(0,0,0,0.4);">
-  <div class="modal-content" style="text-align:left;">
-    <h3>Volver a ubicación</h3>
-    <select id="selector-volver-ubicacion" style="width:100%;margin-bottom:12px;"></select>
-    <div id="info-direccion">
-      <p>Distancia: <span id="distancia"></span></p>
-      <p>Dirección: <span id="direccion"></span></p>
+ <div id="modal-volver" style="display:none; position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:12;justify-content:center;align-items:center;background:rgba(0,0,0,0.4);">
+    <div class="modal-content" style="text-align:left;">
+      <h3>Volver a ubicación</h3>
+      <select id="selector-volver-ubicacion" style="width:100%;margin-bottom:12px;"></select>
+      <div id="info-direccion">
+        <p>Distancia: <span id="distancia"></span></p>
+        <p>Dirección: <span id="direccion"></span></p>
+        <div id="brujula-container">
+          <svg id="brujula" viewBox="0 0 24 24" width="60" height="60" style="transition: transform 0.2s ease;">
+  <path fill="#444" d="M12 2L6 22l6-5 6 5z" />
+</svg>
+        </div>
+      </div>
+      <button onclick="cerrarModalVolver()" class="cancel">Cerrar</button>
     </div>
-    <button onclick="cerrarModalVolver()" class="cancel">Cerrar</button>
   </div>
-</div>
 
   <script>
     let lang = localStorage.getItem("lang") || 'es';
