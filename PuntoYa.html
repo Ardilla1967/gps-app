@@ -279,6 +279,10 @@
   <span>Navegar al punto</span>
 </button>
 
+<button id="btn-permiso-orientacion" onclick="solicitarPermisoOrientacion()" style="display: none; background: #fff59d; color: #000; font-weight: bold; padding: 10px; border-radius: 12px;">
+  Permitir orientación del dispositivo
+</button>
+
 
     </div>
 
@@ -513,6 +517,23 @@
       a.click();
     }
 
+    function solicitarPermisoOrientacion() {
+  if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+    DeviceOrientationEvent.requestPermission()
+      .then(permissionState => {
+        if (permissionState === 'granted') {
+          document.getElementById("btn-permiso-orientacion").style.display = "none";
+          console.log("✔ Permiso para orientación otorgado.");
+        } else {
+          alert("Permiso no otorgado. No se podrá orientar la flecha.");
+        }
+      })
+      .catch(err => {
+        console.error("Error al solicitar permiso:", err);
+      });
+  }
+}
+
     // MODAL BORRAR
     function abrirModalBorrar() {
       document.getElementById("modal-borrar").style.display = "flex";
@@ -727,6 +748,18 @@ if (window.DeviceOrientationEvent) {
     actualizarRotacionFlecha();
   }, true);
 }
+
+window.onload = () => {
+  aplicarTraduccion();
+  document.querySelectorAll('.lang-selector button').forEach(btn => {
+    if (btn.dataset.lang === lang) btn.classList.add('selected');
+  });
+
+  // Mostrar botón si es iOS y se requiere permiso
+  if (/iPhone|iPad|iPod/i.test(navigator.userAgent) && typeof DeviceOrientationEvent?.requestPermission === 'function') {
+    document.getElementById("btn-permiso-orientacion").style.display = "block";
+  }
+};
 
   </script>
 </body>
