@@ -69,6 +69,12 @@
       margin-top: 16px;
       
     }
+    <div id="indicador-direccion" style="display: none; flex-direction: column; align-items: center; margin-top: 20px;">
+  <img id="flecha" src="Flecha.png" style="height: 60px; transition: transform 0.3s ease;" />
+  <div id="distancia-info" style="color: white; font-size: 1.1em; margin-top: 8px;">Distancia: 0 m</div>
+  <div id="direccion-info" style="color: white; font-size: 1em; margin-top: 4px;">Dirección: —</div>
+</div>
+
     input[type="text"] {
       width: 100%;
       padding: 12px;
@@ -645,20 +651,25 @@ function actualizarNavegacion(pos) {
   const dlon = lon2 - lon1;
 
   // Distancia Haversine
-  const a = Math.sin(dlat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dlon/2)**2;
+  const a = Math.sin(dlat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dlon / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distancia = 6371000 * c; // en metros
+  const distancia = 6371000 * c; // metros
   document.getElementById("distancia-info").innerText = `Distancia: ${Math.round(distancia)} m`;
 
-  // Dirección
+  // Cálculo del ángulo en grados
   const y = Math.sin(dlon) * Math.cos(lat2);
-  const x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2)*Math.cos(dlon);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dlon);
   let brujula = Math.atan2(y, x) * 180 / Math.PI;
   brujula = (brujula + 360) % 360;
 
-  // Aplica rotación a la flecha
+  // Rotar imagen
   document.getElementById("flecha").style.transform = `rotate(${brujula}deg)`;
+
+  // Mostrar dirección cardinal
+  const direccionTexto = obtenerDireccionCardinal(brujula);
+  document.getElementById("direccion-info").innerText = `Dirección: ${direccionTexto}`;
 }
+
 function iniciarNavegacionSeleccionada() {
   const idx = document.getElementById("selector-ubicaciones").value;
   const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
@@ -677,6 +688,16 @@ function iniciarNavegacionSeleccionada() {
   watcherId = navigator.geolocation.watchPosition(actualizarNavegacion, err => {
     alert("No se pudo acceder a la geolocalización.");
   }, { enableHighAccuracy: true });
+}
+function obtenerDireccionCardinal(angulo) {
+  const direcciones = [
+    "Norte", "Norte-Noreste", "Noreste", "Este-Noreste",
+    "Este", "Este-Sureste", "Sureste", "Sur-Sureste",
+    "Sur", "Sur-Suroeste", "Suroeste", "Oeste-Suroeste",
+    "Oeste", "Oeste-Noroeste", "Noroeste", "Norte-Noroeste"
+  ];
+  const index = Math.round(angulo / 22.5) % 16;
+  return direcciones[index];
 }
 
   </script>
