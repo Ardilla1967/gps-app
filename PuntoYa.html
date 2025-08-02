@@ -687,3 +687,156 @@ function obtenerDireccionCardinal(grados) {
   </script>
 </body>
 </html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>PuntoYa!</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --primary: #1800ad;
+      --danger: #f76334;
+      --yellow: #ffde59;
+      --white: #ffffff;
+      --gray: #f1f5f9;
+      --bg: rgb(50,130,246);
+      --blue-light: rgb(115, 251, 253);
+      --green-light: rgb(117, 250, 97);
+      --radius: 16px;
+      --map-btn-bg: rgb(161, 251, 142);
+    }
+    #brujula-container {
+      text-align: center;
+      margin-top: 10px;
+    }
+    #brujula {
+      height: 60px;
+      transition: transform 0.2s ease;
+    }
+  </style>
+</head>
+<body>
+  <!-- Aquí mantienes tu estructura visual, botones, campos, y modales existentes... -->
+
+  <!-- Modal Volver actualizado con brújula -->
+  <div id="modal-volver" style="display:none; position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:12;justify-content:center;align-items:center;background:rgba(0,0,0,0.4);">
+    <div class="modal-content" style="text-align:left;">
+      <h3>Volver a ubicación</h3>
+      <select id="selector-volver-ubicacion" style="width:100%;margin-bottom:12px;"></select>
+      <div id="info-direccion">
+        <p>Distancia: <span id="distancia"></span></p>
+        <p>Dirección: <span id="direccion"></span></p>
+        <div id="brujula-container">
+          <img id="brujula" src="flecha.png" alt="Flecha hacia punto guardado">
+        </div>
+      </div>
+      <button onclick="cerrarModalVolver()" class="cancel">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    let destinoActual = null;
+
+    function abrirModalVolver() {
+      const selector = document.getElementById("selector-volver-ubicacion");
+      selector.innerHTML = "";
+
+      const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+
+      if (ubicaciones.length === 0) {
+        const opt = document.createElement("option");
+        opt.text = "No hay ubicaciones";
+        opt.disabled = true;
+        selector.appendChild(opt);
+      } else {
+        ubicaciones.forEach((u, i) => {
+          const opt = document.createElement("option");
+          opt.value = i;
+          opt.text = `${u.nombre} | ${u.lat},${u.lon}`;
+          selector.appendChild(opt);
+        });
+
+        selector.onchange = () => actualizarDistanciaDireccion(ubicaciones[selector.value]);
+        selector.selectedIndex = 0;
+        actualizarDistanciaDireccion(ubicaciones[0]);
+      }
+
+      document.getElementById("modal-volver").style.display = "flex";
+
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission().catch(() => {
+          alert("Debes permitir acceso al sensor de orientación para usar la brújula.");
+        });
+      }
+    }
+
+    function cerrarModalVolver() {
+      document.getElementById("modal-volver").style.display = "none";
+    }
+
+    function actualizarDistanciaDireccion(destino) {
+      destinoActual = destino;
+      if (!navigator.geolocation) {
+        alert("Geolocalización no soportada.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(pos => {
+        const lat1 = pos.coords.latitude * Math.PI / 180;
+        const lon1 = pos.coords.longitude * Math.PI / 180;
+        const lat2 = parseFloat(destino.lat) * Math.PI / 180;
+        const lon2 = parseFloat(destino.lon) * Math.PI / 180;
+
+        const dlat = lat2 - lat1;
+        const dlon = lon2 - lon1;
+
+        const R = 6371e3;
+        const a = Math.sin(dlat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dlon/2)**2;
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distancia = Math.round(R * c);
+
+        const y = Math.sin(dlon) * Math.cos(lat2);
+        const x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2)*Math.cos(dlon);
+        const brng = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+
+        const direccionCardinal = obtenerDireccionCardinal(brng);
+
+        document.getElementById("distancia").innerText = distancia + " metros";
+        document.getElementById("direccion").innerText = direccionCardinal;
+      });
+    }
+
+    function obtenerDireccionCardinal(grados) {
+      const dirs = ['Norte', 'Noreste', 'Este', 'Sureste', 'Sur', 'Suroeste', 'Oeste', 'Noroeste'];
+      const i = Math.round(grados / 45) % 8;
+      return dirs[i];
+    }
+
+    window.addEventListener("deviceorientationabsolute", actualizarBrujula, true);
+    window.addEventListener("deviceorientation", actualizarBrujula, true);
+
+    function actualizarBrujula(event) {
+      if (!destinoActual) return;
+      const alpha = event.alpha;
+      if (alpha == null) return;
+
+      const heading = 360 - alpha;
+
+      navigator.geolocation.getCurrentPosition(pos => {
+        const lat1 = pos.coords.latitude * Math.PI / 180;
+        const lon1 = pos.coords.longitude * Math.PI / 180;
+        const lat2 = parseFloat(destinoActual.lat) * Math.PI / 180;
+        const lon2 = parseFloat(destinoActual.lon) * Math.PI / 180;
+
+        const y = Math.sin(lon2 - lon1) * Math.cos(lat2);
+        const x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2)*Math.cos(lon2 - lon1);
+        const bearing = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+
+        const rotacion = (bearing - heading + 360) % 360;
+        document.getElementById("brujula").style.transform = `rotate(${rotacion}deg)`;
+      });
+    }
+  </script>
+</body>
+</html>
