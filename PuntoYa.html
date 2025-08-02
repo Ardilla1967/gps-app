@@ -662,11 +662,27 @@ function actualizarNavegacion(pos) {
   brujula = (brujula + 360) % 360;
 
   // Rotar imagen
-  document.getElementById("flecha").style.transform = `rotate(${brujula}deg)`;
+ rumboObjetivo = brujula;
+
 
   // Mostrar dirección cardinal
   const direccionTexto = obtenerDireccionCardinal(brujula);
   document.getElementById("direccion-info").innerText = `Dirección: ${direccionTexto}`;
+}
+function actualizarRotacionFlecha() {
+  const diferencia = (rumboObjetivo - headingReal + 360) % 360;
+  document.getElementById("flecha").style.transform = `rotate(${diferencia}deg)`;
+}
+function solicitarPermisoOrientacion() {
+  if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+    DeviceOrientationEvent.requestPermission()
+      .then(permissionState => {
+        if (permissionState === 'granted') {
+          console.log("Permiso otorgado");
+        }
+      })
+      .catch(console.error);
+  }
 }
 
 function iniciarNavegacionSeleccionada() {
@@ -697,6 +713,19 @@ function obtenerDireccionCardinal(angulo) {
   ];
   const index = Math.round(angulo / 22.5) % 16;
   return direcciones[index];
+}
+let headingReal = 0; // dirección real del teléfono
+let rumboObjetivo = 0; // dirección hacia el punto GPS guardado
+
+if (window.DeviceOrientationEvent) {
+  window.addEventListener('deviceorientationabsolute' in window ? 'deviceorientationabsolute' : 'deviceorientation', e => {
+    if (typeof e.webkitCompassHeading !== "undefined") {
+      headingReal = e.webkitCompassHeading; // Safari
+    } else if (e.alpha !== null) {
+      headingReal = 360 - e.alpha; // Chrome
+    }
+    actualizarRotacionFlecha();
+  }, true);
 }
 
   </script>
