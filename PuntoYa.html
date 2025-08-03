@@ -39,23 +39,29 @@
     .logo span {
       color: var(--yellow);
     }
-    .lang-selector {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .lang-selector button {
-      background-color: var(--white);
-      border: none;
-      padding: 6px 16px;
-      border-radius: 12px;
-      font-weight: bold;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
+.lang-selector {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 20;
+}
+
+.lang-selector button {
+  background-color: var(--white);
+  border: none;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9em;
+}
+
     .container {
       background-color: var(--white);
       padding: 24px 18px;
@@ -222,10 +228,15 @@
   </style>
 </head>
 <body>
+ <div class="lang-selector">
+  <button id="btn-es" data-lang="es" onclick="setLang('es')">🇪🇸 ES</button>
+  <button id="btn-en" data-lang="en" onclick="setLang('en')">🇬🇧 EN</button>
+</div>
+
  <div class="logo" style="display: flex; align-items: center; gap: 4px; font-size: 1.8em;">
-  <span style="color: #e69809">Punt</span>
+  <span style="color: #f5f4f3">Punt</span>
   <img src="PUNTOMAPS.png" alt="Icono ubicación" style="height: 1em; vertical-align: middle;" />
-  <span style="color: #e69809;">YA</span>
+  <span style="color: #f7f4ee;">YA</span>
   <span style="color: #ff3131;">!</span>
 </div>
 
@@ -235,10 +246,7 @@
   <div id="direccion-info" style="color: white; font-size: 1em; margin-top: 4px;">Dirección: —</div>
 </div>
 
- <div class="lang-selector">
-  <button id="btn-es" data-lang="es" onclick="setLang('es')">🇪🇸 ES</button>
-  <button id="btn-en" data-lang="en" onclick="setLang('en')">🇬🇧 EN</button>
-</div>
+
 
   <div class="container">
     <input type="text" id="nombre" placeholder="Nombrar la Actual Ubicación (opcional)" />
