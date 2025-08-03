@@ -106,10 +106,13 @@
       background-color: var(--blue-light);
       color: var(--primary);
     }
-    .mapa {
-      background-color: var(--white);
-      border: 2px solid var(--gray);
-    }
+.mapa {
+  background-color: #d8d513; /* nuevo color verde personalizado */
+  border: none;
+  color: white;
+  font-weight: bold;
+}
+
     .exportar {
       background-color: var(--white);
       border: 2px solid var(--gray);
@@ -225,6 +228,22 @@
     @media (max-width:480px) {
       .modal-content, #modal .modal-content { max-width:98vw; }
     }
+#btn-ver,
+#btn-ir-navegacion {
+  background-color: #f7e800;
+  color: #111;
+  border: none;
+  font-weight: bold;
+  border-radius: 12px;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+#btn-ver:hover,
+#btn-ir-navegacion:hover {
+  background-color: #e4ffa0;
+}
+
   </style>
 </head>
 <body>
@@ -317,11 +336,10 @@
   
   <button onclick="verSeleccionadaEnMapa()" id="btn-ver">Ir a Mapa</button>
 
-  <!-- 📌 Este es el nuevo botón -->
-  <button onclick="iniciarNavegacionSeleccionada()" id="btn-ir-navegacion"
-    style="background: var(--green-light); color: #111; font-weight: bold;">
-    Navegar a Punto
-  </button>
+<button onclick="iniciarNavegacionSeleccionada()" id="btn-ir-navegacion">
+  Navegar a Punto
+</button>
+
 
   <button onclick="cerrarModal()" id="btn-cancelar">Cancelar</button>
 </div>
