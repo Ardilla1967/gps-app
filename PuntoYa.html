@@ -695,7 +695,14 @@ function actualizarNavegacion(pos) {
   const a = Math.sin(dlat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dlon / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const distancia = 6371000 * c; // metros
-  document.getElementById("distancia-info").innerText = `Distancia: ${Math.round(distancia)} m`;
+  let distanciaTexto;
+if (distancia < 10000) {
+  distanciaTexto = `${Math.round(distancia)} m`;
+} else {
+  distanciaTexto = `${(distancia / 1000).toFixed(1)} km`;
+}
+document.getElementById("distancia-info").innerText = `Distancia: ${distanciaTexto}`;
+
 
   // Cálculo del ángulo en grados
   const y = Math.sin(dlon) * Math.cos(lat2);
