@@ -533,6 +533,27 @@
       });
   }
 }
+function solicitarPermisoOrientacion() {
+  const btn = document.getElementById("btn-permiso-orientacion");
+
+  if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
+    DeviceOrientationEvent.requestPermission()
+      .then(permissionState => {
+        console.log("Estado del permiso:", permissionState); // Verificar en consola
+        if (permissionState === 'granted') {
+          if (btn) btn.style.display = "none"; // Forzamos ocultar
+        } else {
+          alert("Permiso no otorgado.");
+        }
+      })
+      .catch(err => {
+        console.error("Error solicitando permiso:", err);
+      });
+  } else {
+    console.log("Este navegador no requiere permisos.");
+    if (btn) btn.style.display = "none"; // Ocultamos por si acaso
+  }
+}
 
     // MODAL BORRAR
     function abrirModalBorrar() {
