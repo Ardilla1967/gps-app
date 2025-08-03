@@ -119,7 +119,30 @@
   justify-content: center;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   margin: 16px auto;
+  font-weight: bold;
+  font-family: 'Segoe UI', sans-serif;
 }
+
+.brujula-container span {
+  position: absolute;
+  font-size: 0.9em;
+  color: #111;
+}
+
+.norte { top: 6px; left: 50%; transform: translateX(-50%); }
+.sur   { bottom: 6px; left: 50%; transform: translateX(-50%); }
+.este  { top: 50%; right: 6px; transform: translateY(-50%); }
+.oeste { top: 50%; left: 6px; transform: translateY(-50%); }
+
+#flecha {
+  position: absolute;
+  bottom: 50%;
+  height: 60px;
+  transform: rotate(0deg);
+  transform-origin: 50% 100%;
+  transition: transform 0.3s ease;
+}
+
 
 #flecha {
   position: absolute;
@@ -275,8 +298,13 @@
 <body>
 
 <div id="brujula" class="brujula-container">
+  <span class="norte">N</span>
+  <span class="este">E</span>
+  <span class="sur">S</span>
+  <span class="oeste">O</span>
   <img id="flecha" src="Flecha.png" alt="Flecha" />
 </div>
+
 
 
  <div class="lang-selector">
