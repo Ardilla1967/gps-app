@@ -106,6 +106,27 @@
       background-color: var(--blue-light);
       color: var(--primary);
     }
+
+.brujula-container {
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle at center, #ffffff 40%, #dddddd 100%);
+  border: 3px solid #333;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+#flecha {
+  height: 60px;
+  transition: transform 0.3s ease;
+  transform-origin: 50% 100%;
+}
+
+
 .mapa {
   background-color: #d8d513; /* nuevo color verde personalizado */
   border: none;
@@ -247,6 +268,12 @@
   </style>
 </head>
 <body>
+
+<div id="brujula" class="brujula-container">
+  <img id="flecha" src="Flecha.png" alt="Flecha" />
+</div>
+
+
  <div class="lang-selector">
   <button id="btn-es" data-lang="es" onclick="setLang('es')">🇪🇸 ES</button>
   <button id="btn-en" data-lang="en" onclick="setLang('en')">🇬🇧 EN</button>
