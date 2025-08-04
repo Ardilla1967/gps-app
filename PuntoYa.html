@@ -119,49 +119,16 @@
   justify-content: center;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   margin: 16px auto;
-  font-weight: bold;
-  font-family: 'Segoe UI', sans-serif;
 }
-
-.brujula-container {
-  width: 150px;
-  height: 150px;
-  background: rgba(255, 255, 255, 0.2); /* Semitransparente */
-  backdrop-filter: blur(6px); /* efecto vidrio */
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  border-radius: 50%;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  margin: 20px auto;
-  font-weight: bold;
-  font-family: 'Segoe UI', sans-serif;
-}
-
-.brujula-container span {
-  position: absolute;
-  font-size: 1em;
-  color: #ffffff;
-  text-shadow: 0 0 4px #000;
-  pointer-events: none;
-}
-
-.norte { top: 8px; left: 50%; transform: translateX(-50%); }
-.sur   { bottom: 8px; left: 50%; transform: translateX(-50%); }
-.este  { top: 50%; right: 8px; transform: translateY(-50%); }
-.oeste { top: 50%; left: 8px; transform: translateY(-50%); }
 
 #flecha {
   position: absolute;
   bottom: 50%;
-  height: 70px;
-  transform-origin: 50% 100%;
+  height: 60px;
   transform: rotate(0deg);
+  transform-origin: 50% 100%;
   transition: transform 0.3s ease;
 }
-
 
 
 
@@ -302,11 +269,6 @@
 #btn-ir-navegacion:hover {
   background-color: #e4ffa0;
 }
-/* inicia brujula oculata */
-#brujula {
-  display: none;
-}
-
 
   </style>
 </head>
