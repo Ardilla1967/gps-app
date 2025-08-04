@@ -305,7 +305,23 @@
 /* inicia brujula oculata */
 #brujula {
   display: none;
+  width: 150px;
+  height: 150px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(6px);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  position: relative;
+  display: none; /* sigue oculto inicialmente */
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  margin: 20px auto;
+  font-weight: bold;
+  font-family: 'Segoe UI', sans-serif;
+  transition: transform 0.3s ease;
 }
+
 
 
   </style>
@@ -790,48 +806,28 @@ function actualizarNavegacion(pos) {
   const dlat = lat2 - lat1;
   const dlon = lon2 - lon1;
 
-  // Distancia Haversine
   const a = Math.sin(dlat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dlon / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distancia = 6371000 * c; // metros
-  let distanciaTexto;
-if (distancia < 10000) {
-  distanciaTexto = `${Math.round(distancia)} m`;
-} else {
-  distanciaTexto = `${(distancia / 1000).toFixed(1)} km`;
-}
-document.getElementById("distancia-info").innerText = `Distancia: ${distanciaTexto}`;
+  const distancia = 6371000 * c;
 
+  // Mostrar distancia
+  const distanciaTexto = distancia < 10000
+    ? `${Math.round(distancia)} m`
+    : `${(distancia / 1000).toFixed(1)} km`;
+  document.getElementById("distancia-info").innerText = `Distancia: ${distanciaTexto}`;
 
-  // Cálculo del ángulo en grados
+  // Cálculo de rumbo hacia el objetivo
   const y = Math.sin(dlon) * Math.cos(lat2);
   const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dlon);
-  let brujula = Math.atan2(y, x) * 180 / Math.PI;
-  brujula = (brujula + 360) % 360;
+  let rumbo = Math.atan2(y, x) * 180 / Math.PI;
+  rumbo = (rumbo + 360) % 360;
 
-  // Rotar imagen
- rumboObjetivo = brujula;
+  rumboObjetivo = rumbo;
 
+  // Sincronizar: girar todo el círculo al rumbo
+  document.getElementById("brujula").style.transform = `rotate(${rumboObjetivo}deg)`;
+}
 
-  // Mostrar dirección cardinal
-  const direccionTexto = obtenerDireccionCardinal(brujula);
-  document.getElementById("direccion-info").innerText = `Dirección: ${direccionTexto}`;
-}
-function actualizarRotacionFlecha() {
-  const diferencia = (rumboObjetivo - headingReal + 360) % 360;
-  document.getElementById("flecha").style.transform = `rotate(${diferencia}deg)`;
-}
-function solicitarPermisoOrientacion() {
-  if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-    DeviceOrientationEvent.requestPermission()
-      .then(permissionState => {
-        if (permissionState === 'granted') {
-          console.log("Permiso otorgado");
-        }
-      })
-      .catch(console.error);
-  }
-}
 
 function iniciarNavegacionSeleccionada() {
   const idx = document.getElementById("selector-ubicaciones").value;
