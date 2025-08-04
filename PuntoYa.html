@@ -820,9 +820,15 @@ function iniciarNavegacionSeleccionada() {
     return;
   }
 
-  objetivo = ubicaciones[idx]; // Punto destino
+  objetivo = ubicaciones[idx];
+
+  // ✅ Mostrar la brújula y el indicador de dirección
+  document.getElementById("brujula").style.display = "flex";
   document.getElementById("indicador-direccion").style.display = "flex";
-  document.getElementById("nombre-objetivo").innerText = `Ubicación: ${objetivo.nombre}`; // ✅ NUEVO
+
+  // ✅ Mostrar el nombre del punto en pantalla
+  document.getElementById("nombre-objetivo").innerText = `Ubicación: ${objetivo.nombre || "(sin nombre)"}`;
+
   cerrarModal();
 
   if (watcherId) navigator.geolocation.clearWatch(watcherId);
@@ -830,6 +836,7 @@ function iniciarNavegacionSeleccionada() {
     alert("No se pudo acceder a la geolocalización.");
   }, { enableHighAccuracy: true });
 }
+
 function obtenerDireccionCardinal(angulo) {
   const direcciones = [
     "Norte", "Norte-Noreste", "Noreste", "Este-Noreste",
