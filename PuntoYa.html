@@ -307,9 +307,6 @@
   display: none;
 }
 
-#brujula {
-  transition: transform 0.3s ease;
-}
 
   </style>
 </head>
@@ -775,7 +772,7 @@ function iniciarNavegacion() {
   }
 
   objetivo = ubicaciones[ubicaciones.length - 1]; // último guardado
-   document.getElementById("brujula").style.display = "flex";  // ✅ mostrar brújula
+  
   document.getElementById("indicador-direccion").style.display = "flex";
 
   if (watcherId) navigator.geolocation.clearWatch(watcherId);
@@ -877,8 +874,6 @@ if (window.DeviceOrientationEvent) {
       headingReal = 360 - e.alpha; // Chrome
     }
     actualizarRotacionFlecha();
-    // 🔁 ROTAR la brújula para indicar el norte magnético
-    document.getElementById("brujula").style.transform = `rotate(${-headingReal}deg)`;
   }, true);
 }
 
