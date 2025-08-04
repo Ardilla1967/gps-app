@@ -307,6 +307,9 @@
   display: none;
 }
 
+#brujula {
+  transition: transform 0.3s ease;
+}
 
   </style>
 </head>
@@ -874,6 +877,8 @@ if (window.DeviceOrientationEvent) {
       headingReal = 360 - e.alpha; // Chrome
     }
     actualizarRotacionFlecha();
+    // 🔁 ROTAR la brújula para indicar el norte magnético
+    document.getElementById("brujula").style.transform = `rotate(${-headingReal}deg)`;
   }, true);
 }
 
