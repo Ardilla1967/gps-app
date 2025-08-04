@@ -299,6 +299,11 @@
   <img id="flecha" src="Flecha.png" alt="Flecha" />
 </div>
 
+<div id="indicador-direccion" style="display: none; flex-direction: column; align-items: center; margin-top: 20px;">
+  <div id="nombre-objetivo" style="color: white; font-size: 1.1em; margin-top: 8px;">Ubicación: —</div>
+  <div id="distancia-info" style="color: rgb(234, 236, 240); font-size: 1.1em; margin-top: 8px;">Distancia: 0 m</div>
+  <div id="direccion-info" style="color: white; font-size: 1em; margin-top: 4px;">Dirección: —</div>
+</div>
 
  <div class="lang-selector">
   <button id="btn-es" data-lang="es" onclick="setLang('es')">🇪🇸 ES</button>
@@ -312,10 +317,7 @@
   <span style="color: #ff3131;">!</span>
 </div>
 
-<div id="indicador-direccion" style="display: none; flex-direction: column; align-items: center; margin-top: 20px;">
-  <div id="distancia-info" style="color: rgb(234, 236, 240); font-size: 1.1em; margin-top: 8px;">Distancia: 0 m</div>
-  <div id="direccion-info" style="color: white; font-size: 1em; margin-top: 4px;">Dirección: —</div>
-</div>
+
 
 
 
@@ -820,7 +822,7 @@ function iniciarNavegacionSeleccionada() {
 
   objetivo = ubicaciones[idx]; // Punto destino
   document.getElementById("indicador-direccion").style.display = "flex";
-
+  document.getElementById("nombre-objetivo").innerText = `Ubicación: ${objetivo.nombre}`; // ✅ NUEVO
   cerrarModal();
 
   if (watcherId) navigator.geolocation.clearWatch(watcherId);
