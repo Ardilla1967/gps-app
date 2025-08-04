@@ -302,6 +302,11 @@
 #btn-ir-navegacion:hover {
   background-color: #e4ffa0;
 }
+/* inicia brujula oculata */
+#brujula {
+  display: none;
+}
+
 
   </style>
 </head>
@@ -767,6 +772,7 @@ function iniciarNavegacion() {
   }
 
   objetivo = ubicaciones[ubicaciones.length - 1]; // último guardado
+   document.getElementById("brujula").style.display = "flex";  // ✅ mostrar brújula
   document.getElementById("indicador-direccion").style.display = "flex";
 
   if (watcherId) navigator.geolocation.clearWatch(watcherId);
@@ -836,7 +842,8 @@ function iniciarNavegacionSeleccionada() {
     return;
   }
 
-  objetivo = ubicaciones[idx]; // Punto destino
+  objetivo = ubicaciones[idx];
+  document.getElementById("brujula").style.display = "flex";  // ✅ mostrar brújula
   document.getElementById("indicador-direccion").style.display = "flex";
 
   cerrarModal();
