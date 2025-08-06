@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Navegar a Ubicación</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial; text-align: center; margin-top: 50px;">
+
+  <h2>Ubicación: Doñihue</h2>
+  <p>Coordenadas: -34.2024, -70.9325</p>
+
+  <button onclick="navegar()" style="padding: 10px 20px; font-size: 16px;">Navegar en Google Maps</button>
+
+  <script>
+    // Coordenadas reales (OJO: ajustadas con punto decimal correcto)
+    const lat = -34.2024;
+    const lng = -70.9325;
+    const nombre = "Doñihue";
+
+    function navegar() {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+      window.open(url, '_blank');
+    }
+  </script>
+
+</body>
+</html>
