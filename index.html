@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PuntoYa</title>
+  <meta name="theme-color" content="#3282F6">
+  <link rel="manifest" href="manifest.json">
+  <style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;color:#222} .box{background:#fff;padding:24px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.12);text-align:center}</style>
+</head>
+<body>
+  <div class="box">
+    <div>Abriendo <b>PuntoYa</b>…</div>
+    <div style="font-size:.9em;color:#666;margin-top:8px">Si no cambia, <a href="./PuntoYa.html">toca aquí</a>.</div>
+  </div>
+  <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('./sw.js').catch(console.error);
+    });
+  }
+  // Tras un pequeño delay para permitir registro SW, redirigimos al HTML existente
+  setTimeout(function(){ window.location.replace('./PuntoYa.html'); }, 200);
+  </script>
+</body>
+</html>
