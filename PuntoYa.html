@@ -130,10 +130,13 @@
 </head>
 <body>
 
-<!-- Brújula (oculta hasta navegar) -->
-<div id="brujula" class="brujula-container">
-  <span class="norte">N</span><span class="este">E</span><span class="sur">S</span><span class="oeste">O</span>
-  <img id="flecha" src="Flecha.png" alt="Flecha" />
+<!-- Brújula + botón activar navegación -->
+<div id="nav-compass-row" style="display:none; align-items:center; justify-content:center; gap:10px; margin-top:10px;">
+  <div id="brujula" class="brujula-container">
+    <span class="norte">N</span><span class="este">E</span><span class="sur">S</span><span class="oeste">O</span>
+    <img id="flecha" src="Flecha.png" alt="Flecha" />
+  </div>
+  <button id="btn-activar-nav" onclick="aceptarPermisoOrientacion()" style="display:none; background:#f1db13; color:#111; border:none; font-weight:bold; border-radius:12px; padding:10px;">Activar navegación</button>
 </div>
 
 <!-- Indicador de Dirección (oculto hasta navegar) -->
@@ -285,7 +288,8 @@
       permiso_msg: "Para continuar, aceptar permisos para navegación.",
       buscar: "Buscar...",
       detener: "Detener navegación",
-      llegaste_confirm: "¡Ya llegaste! ¿Detener navegación?"
+      llegaste_confirm: "¡Ya llegaste! ¿Detener navegación?",
+      activar_nav: "Activar navegación"
     },
     en: {
       placeholder: "Name Current Location (optional)",
@@ -339,6 +343,7 @@
     actualizarResumen();
     const busc = document.getElementById('buscador-ubicaciones'); if (busc) { busc.placeholder = textos[lang].buscar; const cont = document.getElementById('sugerencias-ubicaciones'); if (cont) cont.style.display='none'; }
     const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
+    const bnav = document.getElementById('btn-activar-nav'); if (bnav) bnav.textContent = textos[lang].activar_nav;
   }
 
   function setLang(nuevo) {
@@ -384,6 +389,7 @@
       actualizarResumen();
     const busc = document.getElementById('buscador-ubicaciones'); if (busc) { busc.placeholder = textos[lang].buscar; const cont = document.getElementById('sugerencias-ubicaciones'); if (cont) cont.style.display='none'; }
     const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
+    const bnav = document.getElementById('btn-activar-nav'); if (bnav) bnav.textContent = textos[lang].activar_nav;
     }, function(err) {
       alert("Error al obtener ubicación: " + err.message);
     }, { enableHighAccuracy: true, timeout: 15000 });
@@ -439,6 +445,7 @@
     cerrarModalBorrarSeleccion(); actualizarResumen();
     const busc = document.getElementById('buscador-ubicaciones'); if (busc) { busc.placeholder = textos[lang].buscar; const cont = document.getElementById('sugerencias-ubicaciones'); if (cont) cont.style.display='none'; }
     const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
+    const bnav = document.getElementById('btn-activar-nav'); if (bnav) bnav.textContent = textos[lang].activar_nav;
   }
   function confirmarBorrarTodas() {
     if (confirm(textos[lang].confirm)) {
@@ -447,6 +454,7 @@
       cerrarModalBorrar(); actualizarResumen();
     const busc = document.getElementById('buscador-ubicaciones'); if (busc) { busc.placeholder = textos[lang].buscar; const cont = document.getElementById('sugerencias-ubicaciones'); if (cont) cont.style.display='none'; }
     const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
+    const bnav = document.getElementById('btn-activar-nav'); if (bnav) bnav.textContent = textos[lang].activar_nav;
     }
   }
 
@@ -542,6 +550,7 @@
         if (state==='granted'){
           cerrarModalPermiso();
           activarOrientacion();
+          const bnav = document.getElementById("btn-activar-nav"); if (bnav) bnav.style.display = "none";
         } else {
           alert(lang==='es' ? 'Permiso no otorgado.' : 'Permission not granted.');
         }
@@ -591,6 +600,7 @@
       return;
     }
     objetivo = ubicaciones[idx];
+    document.getElementById("nav-compass-row").style.display = "flex";
     document.getElementById("brujula").style.display = "flex";
     document.getElementById("indicador-direccion").style.display = "flex";
     const btnStop = document.getElementById("btn-detener"); if (btnStop) btnStop.style.display = "block";
@@ -604,7 +614,8 @@
 
     // Mostrar/solicitar permiso de orientación solo ahora (iOS)
     if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
-      abrirModalPermisoOrientacion();
+      // Mostrar botón junto a la brújula; el usuario lo tocará para otorgar permiso
+      const bnav = document.getElementById("btn-activar-nav"); if (bnav) bnav.style.display = "inline-block";
     } else {
       activarOrientacion();
     }
@@ -646,6 +657,8 @@
   function detenerNavegacion() {
     if (watcherId) { try { navigator.geolocation.clearWatch(watcherId); } catch(e){} watcherId = null; }
     document.getElementById("brujula").style.display = "none";
+    const row = document.getElementById("nav-compass-row"); if (row) row.style.display = "none";
+    const bnav = document.getElementById("btn-activar-nav"); if (bnav) bnav.style.display = "none";
     document.getElementById("indicador-direccion").style.display = "none";
     const btnStop = document.getElementById("btn-detener"); if (btnStop) btnStop.style.display = "none";
     llegadaMostrada = false;
@@ -708,6 +721,7 @@
     });
     const busc = document.getElementById('buscador-ubicaciones'); if (busc) { busc.placeholder = textos[lang].buscar; const cont = document.getElementById('sugerencias-ubicaciones'); if (cont) cont.style.display='none'; }
     const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
+    const bnav = document.getElementById('btn-activar-nav'); if (bnav) bnav.textContent = textos[lang].activar_nav;
   });
 </script>
 </body>
