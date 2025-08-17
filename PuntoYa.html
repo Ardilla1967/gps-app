@@ -282,7 +282,7 @@
       btn_borrar_una: "Borrar",
       sin_nombre: "La ubicación actual se guardará sin nombre. ¿Deseas continuar?",
       aceptar: "Aceptar",
-      permiso_msg: "Para continuar, acepta permisos para navegación.",
+      permiso_msg: "Para continuar, aceptar permisos para navegación.",
       buscar: "Buscar...",
       detener: "Detener navegación",
       llegaste_confirm: "¡Ya llegaste! ¿Detener navegación?"
@@ -603,7 +603,7 @@
     }, { enableHighAccuracy: true });
 
     // Mostrar/solicitar permiso de orientación solo ahora (iOS)
-    if (/iPhone|iPad|iPod/i.test(navigator.userAgent) && typeof DeviceOrientationEvent?.requestPermission === 'function') {
+    if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
       abrirModalPermisoOrientacion();
     } else {
       activarOrientacion();
