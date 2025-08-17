@@ -116,6 +116,7 @@
   <div id="nombre-objetivo" style="color: white; font-size: 1.1em; margin-top: 8px;">Ubicación: —</div>
   <div id="distancia-info" style="color: rgb(234, 236, 240); font-size: 1.1em; margin-top: 8px;">Distancia: 0 m</div>
   <div id="direccion-info" style="color: white; font-size: 1em; margin-top: 4px;">Dirección: —</div>
+  <button id="btn-detener" onclick="detenerNavegacion()" style="display:none; background:#f3f3f3; color:#444; border:none; border-radius:12px; padding:10px; margin-top:10px; font-weight:bold;">Detener navegación</button>
 </div>
 
 <!-- Idioma -->
@@ -179,6 +180,7 @@
 <div id="modal">
   <div class="modal-content">
     <h3 id="modal-title">Elige ubicación a ver en el mapa</h3>
+    <input id="buscador-ubicaciones" type="text" placeholder="" oninput="filtrarModal()" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin:8px 0;">
     <select id="selector-ubicaciones"></select>
     <button onclick="verSeleccionadaEnMapa()" id="btn-ver">Ir a Mapa</button>
     <button onclick="iniciarNavegacionSeleccionada()" id="btn-ir-navegacion">Navegar a Punto</button>
@@ -245,7 +247,10 @@
       modal_borrar_seleccion_title: "Selecciona localizaciones a borrar",
       btn_borrar_una: "Borrar",
       sin_nombre: "La ubicación actual se guardará sin nombre. ¿Deseas continuar?",
-      aceptar: "Aceptar"
+      aceptar: "Aceptar",
+      buscar: "Buscar...",
+      detener: "Detener navegación",
+      llegaste_confirm: "¡Ya llegaste! ¿Detener navegación?"
     },
     en: {
       placeholder: "Name Current Location (optional)",
@@ -294,6 +299,8 @@
     document.getElementById("btn-aceptar-sin-nombre").innerText = textos[lang].aceptar;
     document.getElementById("btn-cancelar-sin-nombre").innerText = textos[lang].btn_cancelar;
     actualizarResumen();
+    const busc = document.getElementById('buscador-ubicaciones'); if (busc) busc.placeholder = textos[lang].buscar;
+    const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
   }
 
   function setLang(nuevo) {
@@ -337,6 +344,8 @@
       document.getElementById("nombre").value = "";
       document.getElementById("btn-guardar").style.backgroundColor = 'rgb(117,250,97)';
       actualizarResumen();
+    const busc = document.getElementById('buscador-ubicaciones'); if (busc) busc.placeholder = textos[lang].buscar;
+    const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
     }, function(err) {
       alert("Error al obtener ubicación: " + err.message);
     }, { enableHighAccuracy: true, timeout: 15000 });
@@ -390,37 +399,54 @@
     localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
     document.getElementById("mensaje-status").innerText = textos[lang].eliminado;
     cerrarModalBorrarSeleccion(); actualizarResumen();
+    const busc = document.getElementById('buscador-ubicaciones'); if (busc) busc.placeholder = textos[lang].buscar;
+    const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
   }
   function confirmarBorrarTodas() {
     if (confirm(textos[lang].confirm)) {
       localStorage.removeItem("ubicaciones");
       document.getElementById("mensaje-status").innerText = textos[lang].eliminado;
       cerrarModalBorrar(); actualizarResumen();
+    const busc = document.getElementById('buscador-ubicaciones'); if (busc) busc.placeholder = textos[lang].buscar;
+    const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
     }
   }
 
-  // MODAL MAPA
-  function abrirModal() {
+  
+  // --- Modal search & options rebuild ---
+  let __modalUbicaciones = [];
+  function buildOpcionesModal(filterText) {
     const selector = document.getElementById("selector-ubicaciones");
     selector.innerHTML = "";
-    const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
-
     const placeholder = document.createElement("option");
     placeholder.text = (lang === 'es') ? "— Elegir ubicación —" : "— Select location —";
     placeholder.disabled = true; placeholder.selected = true; selector.appendChild(placeholder);
 
-    if (ubicaciones.length === 0) {
+    if (!__modalUbicaciones.length) {
       const opt = document.createElement("option"); opt.text = textos[lang].no_hay; opt.disabled = true; selector.appendChild(opt);
-    } else {
-      // más recientes primero y SIN coordenadas
-      for (let i = ubicaciones.length - 1; i >= 0; i--) {
-        const u = ubicaciones[i];
-        const opt = document.createElement("option");
-        opt.value = i;
-        opt.text = `${u.nombre || (lang==='es'?'(sin nombre)':'(no name)')} — ${u.fecha}`;
-        selector.appendChild(opt);
-      }
+      return;
     }
+    const f = (filterText || "").toLowerCase().trim();
+    for (let i = __modalUbicaciones.length - 1; i >= 0; i--) {
+      const u = __modalUbicaciones[i];
+      const display = `${u.nombre || (lang==='es'?'(sin nombre)':'(no name)')} — ${u.fecha}`;
+      if (f && !display.toLowerCase().includes(f)) continue;
+      const opt = document.createElement("option");
+      opt.value = i; opt.text = display; selector.appendChild(opt);
+    }
+  }
+  function filtrarModal() {
+    const q = document.getElementById("buscador-ubicaciones").value;
+    buildOpcionesModal(q);
+  }
+
+  // MODAL MAPA
+  function abrirModal() {
+    const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+    __modalUbicaciones = ubicaciones;
+    const busc = document.getElementById("buscador-ubicaciones");
+    if (busc) busc.value = "";
+    buildOpcionesModal("");
     document.getElementById("modal").style.display = "flex";
   }
   function cerrarModal() { document.getElementById("modal").style.display = "none"; }
@@ -442,8 +468,9 @@
   let watcherId = null;
   let headingReal = 0; // dirección real del teléfono
   let rumboObjetivo = 0; // rumbo hacia el destino
+  let llegadaMostrada = false;
 
-  function iniciarNavegacionSeleccionada() {
+  function iniciarNavegacionSeleccionada() { llegadaMostrada = false;
     const idx = document.getElementById("selector-ubicaciones").value;
     const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
     if (idx === "" || ubicaciones[idx] === undefined) {
@@ -453,6 +480,7 @@
     objetivo = ubicaciones[idx];
     document.getElementById("brujula").style.display = "flex";
     document.getElementById("indicador-direccion").style.display = "flex";
+    const btnStop = document.getElementById("btn-detener"); if (btnStop) btnStop.style.display = "block";
     document.getElementById("nombre-objetivo").innerText = `Ubicación: ${objetivo.nombre || "(sin nombre)"}`;
     cerrarModal();
 
@@ -486,6 +514,11 @@
     const distanciaTexto = (distancia < 10000) ? `${Math.round(distancia)} m` : `${(distancia / 1000).toFixed(1)} km`;
     document.getElementById("distancia-info").innerText = `Distancia: ${distanciaTexto}`;
 
+    if (distancia < 10 && !llegadaMostrada) {
+      llegadaMostrada = true;
+      if (confirm(textos[lang].llegaste_confirm)) { detenerNavegacion(); }
+    }
+
     const y = Math.sin(dlon) * Math.cos(lat2);
     const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dlon);
     let brujula = Math.atan2(y, x) * 180 / Math.PI;
@@ -495,6 +528,15 @@
     const direccionTexto = obtenerDireccionCardinal(brujula);
     document.getElementById("direccion-info").innerText = `Dirección: ${direccionTexto}`;
     actualizarRotacionFlecha();
+  }
+
+  
+  function detenerNavegacion() {
+    if (watcherId) { try { navigator.geolocation.clearWatch(watcherId); } catch(e){} watcherId = null; }
+    document.getElementById("brujula").style.display = "none";
+    document.getElementById("indicador-direccion").style.display = "none";
+    const btnStop = document.getElementById("btn-detener"); if (btnStop) btnStop.style.display = "none";
+    llegadaMostrada = false;
   }
 
   function obtenerDireccionCardinal(angulo) {
@@ -556,6 +598,8 @@
     });
     const btn = document.getElementById("btn-permiso-orientacion");
     if (btn) btn.style.display = "none";
+    const busc = document.getElementById('buscador-ubicaciones'); if (busc) busc.placeholder = textos[lang].buscar;
+    const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
   });
 </script>
 </body>
