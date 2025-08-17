@@ -1,10 +1,9 @@
 
-const CACHE = "puntoya-v1";
+const CACHE = "puntoya-v3";
 const BASE = "/gps-app/";
 const ASSETS = [
   BASE,
   BASE + "index.html",
-  BASE + "manifest.json",
   BASE + "PuntoYa.html",
   BASE + "PUNTOMAPS.png",
   BASE + "excel-icon.png",
@@ -18,11 +17,20 @@ self.addEventListener("install", (e) => {
 });
 
 self.addEventListener("activate", (e) => {
-  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))));
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    )
+  );
 });
 
 self.addEventListener("fetch", (e) => {
-  const url = new URL(e.request.url);
-  if (!url.pathname.startsWith(BASE)) return;
-  e.respondWith(caches.match(e.request).then((r) => r || fetch(e.request)));
+  // Sólo manejamos rutas de este proyecto (GitHub Pages de repo)
+  try {
+    const url = new URL(e.request.url);
+    if (!url.pathname.startsWith(BASE)) return;
+  } catch (_) { return; }
+  e.respondWith(
+    caches.match(e.request).then((r) => r || fetch(e.request))
+  );
 });
