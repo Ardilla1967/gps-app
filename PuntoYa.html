@@ -189,9 +189,6 @@
       <img src="basurero-icon.png" alt="Borrar" style="height: 1.4em; margin-right: 6px; vertical-align: middle;" />
       <span id="borrar-txt"></span>
     </button>
-    <button id="btn-permiso-orientacion" onclick="solicitarPermisoOrientacion()" style="display: none; background: #fff59d; color: #000; font-weight: bold; padding: 10px; border-radius: 12px;">
-      Permitir orientación del dispositivo
-    </button>
   </div>
 
   <div class="guardado" id="mensaje-status">Esperando acción...</div>
@@ -245,7 +242,18 @@
       <button class="cancel" onclick="cerrarModalSinNombre()" id="btn-cancelar-sin-nombre">Cancelar</button>
     </div>
   </div>
+
+<!-- Modal permiso orientación (iOS) -->
+<div id="modal-permiso" style="display:none; position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:14;justify-content:center;align-items:center;background:rgba(0,0,0,0.32);">
+  <div class="modal-content">
+    <span id="permiso-msg">Para continuar, acepta permisos para navegación.</span>
+    <div style="display:flex;justify-content:center;gap:12px;margin-top:10px;">
+      <button class="accept" onclick="aceptarPermisoOrientacion()" id="btn-permiso-aceptar">Aceptar</button>
+      <button class="cancel" onclick="cerrarModalPermiso()" id="btn-permiso-cancelar">Cancelar</button>
+    </div>
+  </div>
 </div>
+
 
 <script>
   let lang = localStorage.getItem("lang") || 'es';
@@ -274,6 +282,7 @@
       btn_borrar_una: "Borrar",
       sin_nombre: "La ubicación actual se guardará sin nombre. ¿Deseas continuar?",
       aceptar: "Aceptar",
+      permiso_msg: "Para continuar, acepta permisos para navegación.",
       buscar: "Buscar...",
       detener: "Detener navegación",
       llegaste_confirm: "¡Ya llegaste! ¿Detener navegación?"
@@ -324,6 +333,9 @@
     document.getElementById("mensaje-sin-nombre").innerText = textos[lang].sin_nombre;
     document.getElementById("btn-aceptar-sin-nombre").innerText = textos[lang].aceptar;
     document.getElementById("btn-cancelar-sin-nombre").innerText = textos[lang].btn_cancelar;
+    const pmsg = document.getElementById('permiso-msg'); if (pmsg) pmsg.innerText = textos[lang].permiso_msg;
+    const pac = document.getElementById('btn-permiso-aceptar'); if (pac) pac.innerText = textos[lang].aceptar;
+    const pcc = document.getElementById('btn-permiso-cancelar'); if (pcc) pcc.innerText = textos[lang].btn_cancelar;
     actualizarResumen();
     const busc = document.getElementById('buscador-ubicaciones'); if (busc) { busc.placeholder = textos[lang].buscar; const cont = document.getElementById('sugerencias-ubicaciones'); if (cont) cont.style.display='none'; }
     const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
@@ -521,6 +533,25 @@
     }
   }
 
+
+  function abrirModalPermisoOrientacion(){ const el = document.getElementById('modal-permiso'); if (el) el.style.display='flex'; }
+  function cerrarModalPermiso(){ const el = document.getElementById('modal-permiso'); if (el) el.style.display='none'; }
+  function aceptarPermisoOrientacion(){
+    if (typeof DeviceOrientationEvent?.requestPermission === 'function'){
+      DeviceOrientationEvent.requestPermission().then(state=>{
+        if (state==='granted'){
+          cerrarModalPermiso();
+          activarOrientacion();
+        } else {
+          alert(lang==='es' ? 'Permiso no otorgado.' : 'Permission not granted.');
+        }
+      }).catch(err=>{ console.error(err); alert(lang==='es' ? 'Error al solicitar permiso.' : 'Error requesting permission.'); });
+    } else {
+      activarOrientacion();
+      cerrarModalPermiso();
+    }
+  }
+
   // MODAL MAPA
   function abrirModal() {
     const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
@@ -572,9 +603,8 @@
     }, { enableHighAccuracy: true });
 
     // Mostrar/solicitar permiso de orientación solo ahora (iOS)
-    const btn = document.getElementById("btn-permiso-orientacion");
     if (/iPhone|iPad|iPod/i.test(navigator.userAgent) && typeof DeviceOrientationEvent?.requestPermission === 'function') {
-      btn.style.display = "block";
+      abrirModalPermisoOrientacion();
     } else {
       activarOrientacion();
     }
@@ -659,8 +689,6 @@
     if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
       DeviceOrientationEvent.requestPermission().then(state => {
         if (state === 'granted') {
-          const btn = document.getElementById("btn-permiso-orientacion");
-          if (btn) btn.style.display = "none";
           activarOrientacion();
         } else {
           alert("Permiso no otorgado.");
@@ -678,8 +706,6 @@
     document.querySelectorAll('.lang-selector button').forEach(btn => {
       btn.classList.toggle('selected', btn.dataset.lang === lang);
     });
-    const btn = document.getElementById("btn-permiso-orientacion");
-    if (btn) btn.style.display = "none";
     const busc = document.getElementById('buscador-ubicaciones'); if (busc) { busc.placeholder = textos[lang].buscar; const cont = document.getElementById('sugerencias-ubicaciones'); if (cont) cont.style.display='none'; }
     const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
   });
