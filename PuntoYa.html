@@ -101,6 +101,31 @@
     @media (max-width:480px) { .modal-content, #modal .modal-content { max-width:98vw; } }
     #btn-ver, #btn-ir-navegacion { background-color: #f1db13; color: #111; border: none; font-weight: bold; border-radius: 12px; padding: 10px; margin-top: 10px; }
     #btn-ver:hover, #btn-ir-navegacion:hover { background-color: #e4ffa0; }
+  
+    /* Sugerencias en modal */
+    #sugerencias-ubicaciones{
+      display:none;
+      max-height:200px;
+      overflow:auto;
+      border:1px solid #e5e7eb;
+      border-radius:10px;
+      background:#fff;
+      margin:6px 0 8px 0;
+      padding:6px;
+    }
+    #sugerencias-ubicaciones .sug-item{
+      padding:8px 10px;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:.95em;
+      display:flex; gap:8px; align-items:center;
+    }
+    #sugerencias-ubicaciones .sug-item:hover{
+      background:#f6f6f6;
+    }
+    #sugerencias-ubicaciones .sug-empty{
+      color:#666; font-size:.9em; padding:6px 10px;
+    }
   </style>
 </head>
 <body>
@@ -180,7 +205,8 @@
 <div id="modal">
   <div class="modal-content">
     <h3 id="modal-title">Elige ubicación a ver en el mapa</h3>
-    <input id="buscador-ubicaciones" type="text" placeholder="" oninput="filtrarModal()" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin:8px 0;">
+    <input id="buscador-ubicaciones" type="text" placeholder="" oninput="filtrarModal()" onkeydown="buscarKeydown(event)" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin:8px 0;">
+    <div id="sugerencias-ubicaciones"></div>
     <select id="selector-ubicaciones"></select>
     <button onclick="verSeleccionadaEnMapa()" id="btn-ver">Ir a Mapa</button>
     <button onclick="iniciarNavegacionSeleccionada()" id="btn-ir-navegacion">Navegar a Punto</button>
@@ -299,7 +325,7 @@
     document.getElementById("btn-aceptar-sin-nombre").innerText = textos[lang].aceptar;
     document.getElementById("btn-cancelar-sin-nombre").innerText = textos[lang].btn_cancelar;
     actualizarResumen();
-    const busc = document.getElementById('buscador-ubicaciones'); if (busc) busc.placeholder = textos[lang].buscar;
+    const busc = document.getElementById('buscador-ubicaciones'); if (busc) { busc.placeholder = textos[lang].buscar; const cont = document.getElementById('sugerencias-ubicaciones'); if (cont) cont.style.display='none'; }
     const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
   }
 
@@ -344,7 +370,7 @@
       document.getElementById("nombre").value = "";
       document.getElementById("btn-guardar").style.backgroundColor = 'rgb(117,250,97)';
       actualizarResumen();
-    const busc = document.getElementById('buscador-ubicaciones'); if (busc) busc.placeholder = textos[lang].buscar;
+    const busc = document.getElementById('buscador-ubicaciones'); if (busc) { busc.placeholder = textos[lang].buscar; const cont = document.getElementById('sugerencias-ubicaciones'); if (cont) cont.style.display='none'; }
     const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
     }, function(err) {
       alert("Error al obtener ubicación: " + err.message);
@@ -399,7 +425,7 @@
     localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
     document.getElementById("mensaje-status").innerText = textos[lang].eliminado;
     cerrarModalBorrarSeleccion(); actualizarResumen();
-    const busc = document.getElementById('buscador-ubicaciones'); if (busc) busc.placeholder = textos[lang].buscar;
+    const busc = document.getElementById('buscador-ubicaciones'); if (busc) { busc.placeholder = textos[lang].buscar; const cont = document.getElementById('sugerencias-ubicaciones'); if (cont) cont.style.display='none'; }
     const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
   }
   function confirmarBorrarTodas() {
@@ -407,7 +433,7 @@
       localStorage.removeItem("ubicaciones");
       document.getElementById("mensaje-status").innerText = textos[lang].eliminado;
       cerrarModalBorrar(); actualizarResumen();
-    const busc = document.getElementById('buscador-ubicaciones'); if (busc) busc.placeholder = textos[lang].buscar;
+    const busc = document.getElementById('buscador-ubicaciones'); if (busc) { busc.placeholder = textos[lang].buscar; const cont = document.getElementById('sugerencias-ubicaciones'); if (cont) cont.style.display='none'; }
     const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
     }
   }
@@ -438,6 +464,61 @@
   function filtrarModal() {
     const q = document.getElementById("buscador-ubicaciones").value;
     buildOpcionesModal(q);
+    renderSugerencias(q);
+  }
+
+  
+  // --- Sugerencias visuales en el modal ---
+  function renderSugerencias(filterText){
+    const cont = document.getElementById('sugerencias-ubicaciones');
+    if (!cont) return;
+    cont.innerHTML = '';
+    const f = (filterText||'').toLowerCase().trim();
+    // Construye la misma lista que en el <select>, pero como ítems clicables
+    let count = 0;
+    for (let i = __modalUbicaciones.length - 1; i >= 0; i--) {
+      const u = __modalUbicaciones[i];
+      const display = `${u.nombre || (lang==='es'?'(sin nombre)':'(no name)')} — ${u.fecha}`;
+      if (f && !display.toLowerCase().includes(f)) continue;
+      const div = document.createElement('div');
+      div.className = 'sug-item';
+      div.dataset.idx = String(i);
+      div.innerText = display;
+      div.onclick = () => seleccionarEnModal(i);
+      cont.appendChild(div);
+      count++;
+      if (count >= 30) break; // límite razonable
+    }
+    if (count === 0){
+      const empty = document.createElement('div');
+      empty.className = 'sug-empty';
+      empty.innerText = (lang==='es' ? 'Sin resultados' : 'No results');
+      cont.appendChild(empty);
+    }
+    cont.style.display = (filterText && filterText.trim() !== '') ? 'block' : 'none';
+  }
+
+  function seleccionarEnModal(idx){
+    // Asegura que el option exista (se reconstruye con el filtro actual)
+    const selector = document.getElementById('selector-ubicaciones');
+    // Si el filtro actual no incluía este índice, reconstruimos sin filtro y volvemos a filtrar para que exista
+    const q = document.getElementById('buscador-ubicaciones').value;
+    buildOpcionesModal(q);
+    // Seleccionamos el option cuyo value == idx
+    selector.value = String(idx);
+    // Ocultamos sugerencias
+    const cont = document.getElementById('sugerencias-ubicaciones');
+    if (cont) cont.style.display = 'none';
+  }
+
+  function buscarKeydown(ev){
+    if (ev.key === 'Enter'){
+      const first = document.querySelector('#sugerencias-ubicaciones .sug-item');
+      if (first && first.dataset.idx){
+        seleccionarEnModal(first.dataset.idx);
+        ev.preventDefault();
+      }
+    }
   }
 
   // MODAL MAPA
@@ -447,6 +528,7 @@
     const busc = document.getElementById("buscador-ubicaciones");
     if (busc) busc.value = "";
     buildOpcionesModal("");
+    renderSugerencias("");
     document.getElementById("modal").style.display = "flex";
   }
   function cerrarModal() { document.getElementById("modal").style.display = "none"; }
@@ -598,7 +680,7 @@
     });
     const btn = document.getElementById("btn-permiso-orientacion");
     if (btn) btn.style.display = "none";
-    const busc = document.getElementById('buscador-ubicaciones'); if (busc) busc.placeholder = textos[lang].buscar;
+    const busc = document.getElementById('buscador-ubicaciones'); if (busc) { busc.placeholder = textos[lang].buscar; const cont = document.getElementById('sugerencias-ubicaciones'); if (cont) cont.style.display='none'; }
     const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
   });
 </script>
