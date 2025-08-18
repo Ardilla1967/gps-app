@@ -2,6 +2,15 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
+  <base href="./">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3282F6">
+
+<!-- Favicon / atajos (opcional pero útil) -->
+<link rel="icon" href="icon-256.png" sizes="256x256">
+<link rel="apple-touch-icon" href="icon-180.png">
+
   <meta charset="UTF-8">
   <title>PuntoYa!</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -723,6 +732,11 @@
     const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
     const bnav = document.getElementById('btn-activar-nav'); if (bnav) bnav.textContent = textos[lang].activar_nav;
   });
+
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(console.error);
+  }
+
 </script>
 </body>
 </html>
