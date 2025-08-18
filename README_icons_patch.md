@@ -22,4 +22,4 @@ Este patch agrega/actualiza:
 ## Limpieza de caché en el celu
 - Abre la URL, recarga 2–3 veces. Si no cambia:
   - Ajustes del sitio → Borrar datos (esto limpia SW/manifest en caché)
-  - Vuelve a abrir y prueba **Instalar app**.
+  - Vuelve a abrir y prueba **Instalar - app**.
