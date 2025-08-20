@@ -1,5 +1,5 @@
 // sube el número cada vez que haya cambios
-const CACHE_NAME = 'puntoya-v7';  // antes v6, v5, etc.
+const CACHE_NAME = 'puntoya-v11';  // antes v6, v5, etc.
 const ASSETS = [
   './',
   './index.html',
