@@ -2,25 +2,750 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PuntoYa</title>
-  <meta name="theme-color" content="#3282F6">
+  <title>PuntoYa!</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- PWA basics -->
+  <base href="./">
   <link rel="manifest" href="manifest.json">
-  <style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;color:#222} .box{background:#fff;padding:24px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.12);text-align:center}</style>
+  <meta name="theme-color" content="#3282F6">
+  <link rel="icon" href="icon-256.png" sizes="256x256">
+  <link rel="apple-touch-icon" href="icon-180.png">
+
+  <style>
+    :root {
+      --primary: #1800ad;
+      --danger: #f76334;
+      --yellow: #ffde59;
+      --white: #ffffff;
+      --gray: #f1f5f9;
+      --bg: rgb(50,130,246);
+      --blue-light: rgb(115, 251, 253);
+      --green-light: rgb(117, 250, 97);
+      --radius: 16px;
+      --map-btn-bg: rgb(161, 251, 142);
+    }
+    .lang-selector button.selected { background-color: rgb(135,237,237) !important; }
+    body {
+      background-color: var(--bg);
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0; padding: 0;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .logo { margin: 24px auto 8px auto; font-size: 1.8em; font-weight: bold; color: var(--white); }
+    .logo span { color: var(--yellow); }
+    .lang-selector {
+      position: absolute; top: 10px; left: 10px;
+      display: flex; flex-direction: column; gap: 6px; z-index: 20;
+    }
+    .lang-selector button {
+      background-color: var(--white); border: none; padding: 6px 12px; border-radius: 10px;
+      font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9em;
+    }
+
+    .container {
+      background-color: var(--white);
+      padding: 24px 18px;
+      border-radius: var(--radius);
+      width: 90%; max-width: 340px;
+      display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 16px;
+    }
+    input[type="text"] {
+      width: 100%; padding: 12px; border-radius: var(--radius); border: none; font-size: 1em; background-color: var(--gray);
+    }
+    .grid-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+    button {
+      border: none; padding: 14px; border-radius: var(--radius); font-size: 0.95em; font-weight: bold; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+    }
+    .guardar { background-color: var(--blue-light); color: var(--primary); }
+
+    .brujula-container {
+      width: 150px; height: 150px; background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(6px); border: 2px solid rgba(255, 255, 255, 0.4);
+      border-radius: 50%; position: relative; display: none;
+      align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,.2);
+      margin: 20px auto; font-weight: bold; font-family: 'Segoe UI', sans-serif;
+    }
+    .brujula-container span { position: absolute; font-size: 1em; color: #ffffff; text-shadow: 0 0 4px #000; pointer-events: none; }
+    .norte { top: 8px; left: 50%; transform: translateX(-50%); }
+    .sur   { bottom: 8px; left: 50%; transform: translateX(-50%); }
+    .este  { top: 50%; right: 8px; transform: translateY(-50%); }
+    .oeste { top: 50%; left: 8px; transform: translateY(-50%); }
+    #flecha { position: absolute; bottom: 50%; height: 70px; transform-origin: 50% 100%; transform: rotate(0deg); transition: transform .18s ease; }
+
+    .mapa { background-color: #d8d513; border: none; color: white; font-weight: bold; }
+    .borrar { background-color: var(--danger); color: var(--white); }
+    .guardado, .guardadas {
+      background-color: var(--white); width: 100%; text-align: center; padding: 12px; border-radius: var(--radius);
+      font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .guardadas { color: var(--danger); }
+    #modal, #modal-borrar, #modal-borrar-seleccion, #modal-sin-nombre {
+      display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 10;
+    }
+    #modal .modal-content { background: #fff; }
+    .modal-content {
+      background: white; border-radius: var(--radius); padding: 20px; text-align: center; width: 90%; max-width: 300px;
+    }
+    .modal-content select, .modal-content button { width: 100%; margin-top: 10px; padding: 10px; font-size: 1em; border-radius: 12px; }
+    .modal-content .grouped-buttons { display: flex; flex-direction: column; gap: 9px; margin-top: 10px; }
+    .modal-content button.confirm { background: var(--danger); color: #fff; font-weight: bold; border: none; }
+    .modal-content button.secondary { background: var(--yellow); color: #222; border: none; font-weight: bold; }
+    .modal-content button.cancel { background: #f3f3f3; color: #444; border: none; }
+    #btn-ver { background: var(--map-btn-bg) !important; color: #222 !important; border: none !important; }
+    #selector-borrar-ubicacion { min-height: 90px; font-size: .99em; }
+    #modal-sin-nombre { z-index: 14; background: rgba(0,0,0,0.32); }
+    #modal-sin-nombre .modal-content {
+      background: #fdfcdc; border-radius: var(--radius); max-width: 310px; margin: 0 auto; padding: 28px 16px 18px 16px;
+      font-size: 1.05em; color: #333;
+    }
+    #modal-sin-nombre button { width: 45%; margin: 10px 5px 0 5px; padding: 10px; border-radius: 10px; font-size: 1em; border: none; font-weight: bold; cursor: pointer; }
+    #modal-sin-nombre .accept { background: #b2e368; color: #111;}
+    #modal-sin-nombre .cancel { background: #f3f3f3; color: #222;}
+    @media (max-width:480px) { .modal-content, #modal .modal-content { max-width:98vw; } }
+    #btn-ver, #btn-ir-navegacion { background-color: #f1db13; color: #111; border: none; font-weight: bold; border-radius: 12px; padding: 10px; margin-top: 10px; }
+    #btn-ver:hover, #btn-ir-navegacion:hover { background-color: #e4ffa0; }
+
+    /* Sugerencias en modal */
+    #sugerencias-ubicaciones{
+      display:none;
+      max-height:200px;
+      overflow:auto;
+      border:1px solid #e5e7eb;
+      border-radius:10px;
+      background:#fff;
+      margin:6px 0 8px 0;
+      padding:6px;
+    }
+    #sugerencias-ubicaciones .sug-item{
+      padding:8px 10px;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:.95em;
+      display:flex; gap:8px; align-items:center;
+    }
+    #sugerencias-ubicaciones .sug-item:hover{ background:#f6f6f6; }
+    #sugerencias-ubicaciones .sug-empty{ color:#666; font-size:.9em; padding:6px 10px; }
+  </style>
 </head>
 <body>
-  <div class="box">
-    <div>Abriendo <b>PuntoYa</b>…</div>
-    <div style="font-size:.9em;color:#666;margin-top:8px">Si no cambia, <a href="./PuntoYa.html">toca aquí</a>.</div>
+
+<!-- Brújula + botón activar navegación -->
+<div id="nav-compass-row" style="display:none; align-items:center; justify-content:center; gap:10px; margin-top:10px;">
+  <div id="brujula" class="brujula-container">
+    <span class="norte">N</span><span class="este">E</span><span class="sur">S</span><span class="oeste">O</span>
+    <img id="flecha" src="Flecha.png" alt="Flecha" />
   </div>
-  <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('./sw.js').catch(console.error);
+  <button id="btn-activar-nav" onclick="aceptarPermisoOrientacion()" style="display:none; background:#f1db13; color:#111; border:none; font-weight:bold; border-radius:12px; padding:10px;">Activar navegación</button>
+</div>
+
+<!-- Indicador de Dirección -->
+<div id="indicador-direccion" style="display: none; flex-direction: column; align-items: center; margin-top: 20px;">
+  <div id="nombre-objetivo" style="color: white; font-size: 1.1em; margin-top: 8px;">Ubicación: —</div>
+  <div id="distancia-info" style="color: rgb(234, 236, 240); font-size: 1.1em; margin-top: 8px;">Distancia: 0 m</div>
+  <div id="direccion-info" style="color: white; font-size: 1em; margin-top: 4px;">Dirección: —</div>
+  <button id="btn-detener" onclick="detenerNavegacion()" style="display:none; background:#f3f3f3; color:#444; border:none; border-radius:12px; padding:10px; margin-top:10px; font-weight:bold;">Detener navegación</button>
+</div>
+
+<!-- Idioma -->
+<div class="lang-selector">
+  <button id="btn-es" data-lang="es" onclick="setLang('es')">🇪🇸 ES</button>
+  <button id="btn-en" data-lang="en" onclick="setLang('en')">🇬🇧 EN</button>
+</div>
+
+<!-- Logo -->
+<div class="logo" style="display: flex; align-items: center; gap: 4px; font-size: 1.8em;">
+  <span style="color: #f5f4f3">Punt</span>
+  <img src="PUNTOMAPS.png" alt="Icono ubicación" style="height: 1em; vertical-align: middle;" />
+  <span style="color: #f7f4ee;">YA</span><span style="color: #ff3131;">!</span>
+</div>
+
+<div class="container">
+  <input type="text" id="nombre" placeholder="Nombrar la Actual Ubicación (opcional)" />
+  <div class="grid-buttons">
+    <button id="btn-guardar" class="guardar" onclick="preGuardarUbicacion()">
+      <span style="display:inline-block;vertical-align:middle;width:1.2em;height:1.2em;">
+        <svg viewBox="0 0 24 24" fill="#1874fa" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C7.59 2 4 5.42 4 9.5c0 5.39 6.48 11.88 6.75 12.15.41.41 1.08.41 1.49 0C13.52 21.38 20 14.89 20 9.5 20 5.42 16.41 2 12 2zm0 17.77c-2.34-2.36-6-6.91-6-10.27 0-3.04 2.69-5.5 6-5.5s6 2.46 6 5.5c0 3.36-3.66 7.91-6 10.27z"/>
+          <circle cx="12" cy="9.5" r="2.5" fill="#4285f4"/>
+        </svg>
+      </span>
+      <span id="guardar-txt"></span>
+    </button>
+    <button class="mapa" onclick="abrirModal()">
+      <span style="display:inline-block;vertical-align:middle;width:1.2em;height:1.2em;">
+        <svg viewBox="0 0 24 24" fill="#1874fa" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C7.59 2 4 5.42 4 9.5c0 5.39 6.48 11.88 6.75 12.15.41.41 1.08.41 1.49 0C13.52 21.38 20 14.89 20 9.5 20 5.42 16.41 2 12 2zm0 17.77c-2.34-2.36-6-6.91-6-10.27 0-3.04 2.69-5.5 6-5.5s6 2.46 6 5.5c0 3.36-3.66 7.91-6 10.27z"/>
+          <circle cx="12" cy="9.5" r="2.5" fill="#4285f4"/>
+        </svg>
+      </span>
+      <span id="ver-txt"></span>
+    </button>
+  </div>
+
+  <div class="grid-buttons">
+    <!-- Export button removed -->
+    <button class="borrar" onclick="abrirModalBorrar()">
+      <img src="basurero-icon.png" alt="Borrar" style="height: 1.4em; margin-right: 6px; vertical-align: middle;" />
+      <span id="borrar-txt"></span>
+    </button>
+  </div>
+
+  <div class="guardado" id="mensaje-status">Esperando acción...</div>
+  <div class="guardadas" id="lista-resumen">
+    <img src="Mis-ubicaciones-icon.png" alt="Mis ubicaciones" style="height: 1.4em; margin-right: 6px; vertical-align: middle;" />
+    Ubicaciones guardadas: 0
+  </div>
+</div>
+
+<!-- Modal Mapa -->
+<div id="modal">
+  <div class="modal-content">
+    <h3 id="modal-title">Elige ubicación a ver en el mapa</h3>
+    <input id="buscador-ubicaciones" type="text" placeholder="" oninput="filtrarModal()" onkeydown="buscarKeydown(event)" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin:8px 0;">
+    <div id="sugerencias-ubicaciones"></div>
+    <select id="selector-ubicaciones"></select>
+    <button onclick="verSeleccionadaEnMapa()" id="btn-ver">Ir a Mapa</button>
+    <button onclick="iniciarNavegacionSeleccionada()" id="btn-ir-navegacion">Navegar a Punto</button>
+    <button onclick="cerrarModal()" id="btn-cancelar">Cancelar</button>
+  </div>
+</div>
+
+<!-- Modal Borrar -->
+<div id="modal-borrar">
+  <div class="modal-content">
+    <h3 id="modal-borrar-title">¿Qué deseas borrar?</h3>
+    <div class="grouped-buttons">
+      <button onclick="abrirModalBorrarSeleccion()" id="btn-borrar-seleccionar" class="secondary">Seleccionar</button>
+      <button onclick="confirmarBorrarTodas()" id="btn-borrar-todas" class="confirm">Todas</button>
+      <button onclick="cerrarModalBorrar()" id="btn-borrar-cancelar" class="cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Borrar Selección -->
+<div id="modal-borrar-seleccion" style="display:none; position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:12;justify-content:center;align-items:center;background:rgba(0,0,0,0.4);">
+  <div class="modal-content">
+    <h3 id="modal-borrar-seleccion-title">Selecciona localizaciones a borrar</h3>
+    <select id="selector-borrar-ubicacion" multiple></select>
+    <button onclick="borrarMultiplesSeleccionadas()" id="btn-borrar-una" class="confirm">Borrar</button>
+    <button onclick="cerrarModalBorrarSeleccion()" id="btn-borrar-cancelar2" class="cancel">Cancelar</button>
+  </div>
+</div>
+
+<!-- Modal guardar sin nombre -->
+<div id="modal-sin-nombre">
+  <div class="modal-content">
+    <span id="mensaje-sin-nombre">La ubicación actual se guardará sin nombre. ¿Deseas continuar?</span>
+    <div style="display:flex;justify-content:center;gap:12px;">
+      <button class="accept" onclick="guardarUbicacion(true)" id="btn-aceptar-sin-nombre">Aceptar</button>
+      <button class="cancel" onclick="cerrarModalSinNombre()" id="btn-cancelar-sin-nombre">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- (Opcional) Modal permiso orientación para iOS -->
+<div id="modal-permiso" style="display:none; position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:14;justify-content:center;align-items:center;background:rgba(0,0,0,0.32);">
+  <div class="modal-content">
+    <span id="permiso-msg">Para continuar, acepta permisos para navegación.</span>
+    <div style="display:flex;justify-content:center;gap:12px;margin-top:10px;">
+      <button class="accept" onclick="aceptarPermisoOrientacion()" id="btn-permiso-aceptar">Aceptar</button>
+      <button class="cancel" onclick="cerrarModalPermiso()" id="btn-permiso-cancelar">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Idiomas
+  let lang = localStorage.getItem("lang") || 'es';
+  const textos = {
+    es: {
+      placeholder: "Nombrar la Actual Ubicación (opcional)",
+      guardar: "Guardar ubicación",
+      ver: "Ver en mapa",
+      borrar: "Borrar ubicaciones",
+      status_inicio: "Esperando acción...",
+      resumen: n => `📍 Mis ubicaciones guardadas: ${n}`,
+      modal_titulo: "Elige ubicación a ver en el mapa",
+      modal_ver: "Ir a Mapa",
+      modal_cancelar: "Cancelar",
+      guardado: nombre => `✅ Guardado: ${nombre}`,
+      no_hay: "No hay ubicaciones",
+      confirm: "¿Seguro que deseas borrar TODAS las ubicaciones?",
+      eliminado: "🧹 Eliminado.",
+      modal_borrar_title: "¿Qué deseas borrar?",
+      btn_seleccionar: "Seleccionar",
+      btn_todas: "Todas",
+      btn_cancelar: "Cancelar",
+      modal_borrar_seleccion_title: "Selecciona localizaciones a borrar",
+      btn_borrar_una: "Borrar",
+      sin_nombre: "La ubicación actual se guardará sin nombre. ¿Deseas continuar?",
+      aceptar: "Aceptar",
+      permiso_msg: "Para continuar, aceptar permisos para navegación.",
+      buscar: "Buscar...",
+      detener: "Detener navegación",
+      llegaste_confirm: "¡Ya llegaste! ¿Detener navegación?",
+      activar_nav: "Activar navegación",
+      confirm_delete_one: nombre => `¿Eliminar “${nombre}”? Esta acción no se puede deshacer.`,
+      confirm_delete_some: count => `¿Eliminar ${count} ubicaciones seleccionadas? Esta acción no se puede deshacer.`
+    },
+    en: {
+      placeholder: "Name Current Location (optional)",
+      guardar: "Save location",
+      ver: "View on map",
+      borrar: "Delete locations",
+      status_inicio: "Waiting for action...",
+      resumen: n => `📍 Saved locations: ${n}`,
+      modal_titulo: "Select location to view on map",
+      modal_ver: "Go to Map",
+      modal_cancelar: "Cancel",
+      guardado: nombre => `✅ Saved: ${nombre}`,
+      no_hay: "No locations available",
+      confirm: "Are you sure you want to DELETE ALL locations?",
+      eliminado: "🧹 Deleted.",
+      modal_borrar_title: "What do you want to delete?",
+      btn_seleccionar: "Select",
+      btn_todas: "All",
+      btn_cancelar: "Cancel",
+      modal_borrar_seleccion_title: "Select locations to delete",
+      btn_borrar_una: "Delete",
+      sin_nombre: "The current location will be saved without a name. Continue?",
+      aceptar: "Accept",
+      permiso_msg: "To continue, allow orientation permission.",
+      buscar: "Search...",
+      detener: "Stop navigation",
+      llegaste_confirm: "Arrived! Stop navigation?",
+      activar_nav: "Enable navigation",
+      confirm_delete_one: nombre => `Delete “${nombre}”? This cannot be undone.`,
+      confirm_delete_some: count => `Delete ${count} selected locations? This cannot be undone.`
+    }
+  };
+
+  function aplicarTraduccion() {
+    document.getElementById("nombre").placeholder = textos[lang].placeholder;
+    document.getElementById("guardar-txt").innerText = textos[lang].guardar;
+    document.getElementById("ver-txt").innerText = textos[lang].ver;
+    document.getElementById("borrar-txt").innerText = textos[lang].borrar;
+    document.getElementById("mensaje-status").innerText = textos[lang].status_inicio;
+    document.getElementById("modal-title").innerText = textos[lang].modal_titulo;
+    document.getElementById("btn-ver").innerText = textos[lang].modal_ver;
+    document.getElementById("btn-cancelar").innerText = textos[lang].modal_cancelar;
+    document.getElementById("modal-borrar-title").innerText = textos[lang].modal_borrar_title;
+    document.getElementById("btn-borrar-seleccionar").innerText = textos[lang].btn_seleccionar;
+    document.getElementById("btn-borrar-todas").innerText = textos[lang].btn_todas;
+    document.getElementById("btn-borrar-cancelar").innerText = textos[lang].btn_cancelar;
+    document.getElementById("modal-borrar-seleccion-title").innerText = textos[lang].modal_borrar_seleccion_title;
+    document.getElementById("btn-borrar-una").innerText = textos[lang].btn_borrar_una;
+    document.getElementById("btn-borrar-cancelar2").innerText = textos[lang].btn_cancelar;
+    document.getElementById("mensaje-sin-nombre").innerText = textos[lang].sin_nombre;
+    document.getElementById("btn-aceptar-sin-nombre").innerText = textos[lang].aceptar;
+    document.getElementById("btn-cancelar-sin-nombre").innerText = textos[lang].btn_cancelar;
+    const pmsg = document.getElementById('permiso-msg'); if (pmsg) pmsg.innerText = textos[lang].permiso_msg;
+    const pac = document.getElementById('btn-permiso-aceptar'); if (pac) pac.innerText = textos[lang].aceptar;
+    const pcc = document.getElementById('btn-permiso-cancelar'); if (pcc) pcc.innerText = textos[lang].btn_cancelar;
+    actualizarResumen();
+    const busc = document.getElementById('buscador-ubicaciones'); if (busc) { busc.placeholder = textos[lang].buscar; const cont = document.getElementById('sugerencias-ubicaciones'); if (cont) cont.style.display='none'; }
+    const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
+    const bnav = document.getElementById('btn-activar-nav'); if (bnav) bnav.textContent = textos[lang].activar_nav;
+  }
+
+  function setLang(nuevo) {
+    lang = nuevo;
+    localStorage.setItem("lang", lang);
+    aplicarTraduccion();
+    document.querySelectorAll('.lang-selector button').forEach(btn => {
+      btn.classList.toggle('selected', btn.dataset.lang === lang);
     });
   }
-  // Tras un pequeño delay para permitir registro SW, redirigimos al HTML existente
-  setTimeout(function(){ window.location.replace('./PuntoYa.html'); }, 200);
-  </script>
+
+  // Guardar ubicación
+  function preGuardarUbicacion() {
+    const nombre = document.getElementById("nombre").value.trim();
+    if (!nombre) document.getElementById("modal-sin-nombre").style.display = "flex";
+    else guardarUbicacion(false);
+  }
+  function cerrarModalSinNombre() { document.getElementById("modal-sin-nombre").style.display = "none"; }
+
+  function guardarUbicacion(forzar) {
+    if (!forzar && !document.getElementById("nombre").value.trim()) { preGuardarUbicacion(); return; }
+    cerrarModalSinNombre();
+    if (!navigator.geolocation) { alert("Geolocalización no soportada."); return; }
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      let nombre = document.getElementById("nombre").value.trim();
+      if (!nombre) nombre = (lang === 'es') ? "(sin nombre)" : "(unnamed)";
+      const fecha = new Date().toLocaleString();
+      const lat = pos.coords.latitude.toFixed(6);
+      const lon = pos.coords.longitude.toFixed(6);
+      const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+      ubicaciones.push({ nombre, fecha, lat, lon });
+      localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
+      document.getElementById("mensaje-status").innerText = textos[lang].guardado(nombre);
+      document.getElementById("nombre").value = "";
+      document.getElementById("btn-guardar").style.backgroundColor = 'rgb(117,250,97)';
+      actualizarResumen();
+    }, function(err) {
+      alert("Error al obtener ubicación: " + err.message);
+    }, { enableHighAccuracy: true, timeout: 15000 });
+  }
+
+  function actualizarResumen() {
+    const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+    document.getElementById("lista-resumen").innerHTML = textos[lang].resumen(ubicaciones.length);
+  }
+
+  // MODAL BORRAR
+  function abrirModalBorrar() { document.getElementById("modal-borrar").style.display = "flex"; }
+  function cerrarModalBorrar() { document.getElementById("modal-borrar").style.display = "none"; }
+  function abrirModalBorrarSeleccion() {
+    cerrarModalBorrar();
+    const selector = document.getElementById("selector-borrar-ubicacion");
+    selector.innerHTML = "";
+    const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+    if (ubicaciones.length === 0) {
+      const opt = document.createElement("option"); opt.text = textos[lang].no_hay; selector.appendChild(opt);
+    } else {
+      for (let i = ubicaciones.length - 1; i >= 0; i--) {
+        const u = ubicaciones[i];
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.text = `${u.nombre || (lang==='es'?'(sin nombre)':'(no name)')} — ${u.fecha}`;
+        selector.appendChild(opt);
+      }
+    }
+    document.getElementById("modal-borrar-seleccion").style.display = "flex";
+  }
+  function cerrarModalBorrarSeleccion() { document.getElementById("modal-borrar-seleccion").style.display = "none"; }
+  function borrarMultiplesSeleccionadas() {
+    const sel = document.getElementById("selector-borrar-ubicacion");
+    const selected = Array.from(sel.selectedOptions).map(opt => parseInt(opt.value)).sort((a,b)=>b-a);
+    let ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+    if(selected.length === 0) return;
+
+    // Confirmación con nombres/contador
+    const names = selected.map(i => (ubicaciones[i]?.nombre || (lang==='es'?'(sin nombre)':'(no name)')));
+    const msg = (selected.length === 1)
+      ? textos[lang].confirm_delete_one(names[0])
+      : textos[lang].confirm_delete_some(selected.length);
+    if (!confirm(msg)) return;
+
+    for(const idx of selected) { ubicaciones.splice(idx, 1); }
+    localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
+    document.getElementById("mensaje-status").innerText = textos[lang].eliminado;
+    cerrarModalBorrarSeleccion(); actualizarResumen();
+  }
+  function confirmarBorrarTodas() {
+    if (confirm(textos[lang].confirm)) {
+      localStorage.removeItem("ubicaciones");
+      document.getElementById("mensaje-status").innerText = textos[lang].eliminado;
+      cerrarModalBorrar(); actualizarResumen();
+    }
+  }
+
+  // --- Modal search & options rebuild ---
+  let __modalUbicaciones = [];
+  function buildOpcionesModal(filterText) {
+    const selector = document.getElementById("selector-ubicaciones");
+    selector.innerHTML = "";
+    const placeholder = document.createElement("option");
+    placeholder.text = (lang === 'es') ? "— Elegir ubicación —" : "— Select location —";
+    placeholder.disabled = true; placeholder.selected = true; selector.appendChild(placeholder);
+
+    if (!__modalUbicaciones.length) {
+      const opt = document.createElement("option"); opt.text = textos[lang].no_hay; opt.disabled = true; selector.appendChild(opt);
+      return;
+    }
+    const f = (filterText || "").toLowerCase().trim();
+    for (let i = __modalUbicaciones.length - 1; i >= 0; i--) {
+      const u = __modalUbicaciones[i];
+      const display = `${u.nombre || (lang==='es'?'(sin nombre)':'(no name)')} — ${u.fecha}`;
+      if (f && !display.toLowerCase().includes(f)) continue;
+      const opt = document.createElement("option");
+      opt.value = i; opt.text = display; selector.appendChild(opt);
+    }
+  }
+  function filtrarModal() {
+    const q = document.getElementById("buscador-ubicaciones").value;
+    buildOpcionesModal(q);
+    renderSugerencias(q);
+  }
+
+  // --- Sugerencias visuales en el modal ---
+  function renderSugerencias(filterText){
+    const cont = document.getElementById('sugerencias-ubicaciones');
+    if (!cont) return;
+    cont.innerHTML = '';
+    const f = (filterText||'').toLowerCase().trim();
+    let count = 0;
+    for (let i = __modalUbicaciones.length - 1; i >= 0; i--) {
+      const u = __modalUbicaciones[i];
+      const display = `${u.nombre || (lang==='es'?'(sin nombre)':'(no name)')} — ${u.fecha}`;
+      if (f && !display.toLowerCase().includes(f)) continue;
+      const div = document.createElement('div');
+      div.className = 'sug-item';
+      div.dataset.idx = String(i);
+      div.innerText = display;
+      div.onclick = () => seleccionarEnModal(i);
+      cont.appendChild(div);
+      count++;
+      if (count >= 30) break;
+    }
+    if (count === 0){
+      const empty = document.createElement('div');
+      empty.className = 'sug-empty';
+      empty.innerText = (lang==='es' ? 'Sin resultados' : 'No results');
+      cont.appendChild(empty);
+    }
+    cont.style.display = (filterText && filterText.trim() !== '') ? 'block' : 'none';
+  }
+
+  function seleccionarEnModal(idx){
+    const selector = document.getElementById('selector-ubicaciones');
+    const q = document.getElementById('buscador-ubicaciones').value;
+    buildOpcionesModal(q);
+    selector.value = String(idx);
+    const cont = document.getElementById('sugerencias-ubicaciones');
+    if (cont) cont.style.display = 'none';
+  }
+
+  function buscarKeydown(ev){
+    if (ev.key === 'Enter'){
+      const first = document.querySelector('#sugerencias-ubicaciones .sug-item');
+      if (first && first.dataset.idx){
+        seleccionarEnModal(first.dataset.idx);
+        ev.preventDefault();
+      }
+    }
+  }
+
+  // Permiso orientación (si quisieras usar modal)
+  function abrirModalPermisoOrientacion(){ const el = document.getElementById('modal-permiso'); if (el) el.style.display='flex'; }
+  function cerrarModalPermiso(){ const el = document.getElementById('modal-permiso'); if (el) el.style.display='none'; }
+  function aceptarPermisoOrientacion(){
+    if (typeof DeviceOrientationEvent?.requestPermission === 'function'){
+      DeviceOrientationEvent.requestPermission().then(state=>{
+        if (state==='granted'){
+          cerrarModalPermiso();
+          activarOrientacion();
+          const bnav = document.getElementById("btn-activar-nav"); if (bnav) bnav.style.display = "none";
+        } else {
+          alert(lang==='es' ? 'Permiso no otorgado.' : 'Permission not granted.');
+        }
+      }).catch(err=>{ console.error(err); alert(lang==='es' ? 'Error al solicitar permiso.' : 'Error requesting permission.'); });
+    } else {
+      activarOrientacion();
+      cerrarModalPermiso();
+    }
+  }
+
+  // Navegación
+  let objetivo = null;
+  let watcherId = null;
+  let llegadaMostrada = false;
+
+  // Estados de orientación y fusión
+  let headingRaw = 0;          // lectura cruda del compás
+  let headingFiltered = 0;     // suavizada
+  let headingReady = false;
+  let fusedHeading = 0;        // fusión compás + GPS si hay movimiento
+  let __arrowAngle = 0;        // ángulo mostrado (suavizado)
+  let __py_orientacion_activa = false;
+
+  function iniciarNavegacionSeleccionada() {
+    llegadaMostrada = false;
+    const idx = document.getElementById("selector-ubicaciones").value;
+    const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+    if (idx === "" || ubicaciones[idx] === undefined) {
+      alert((lang === 'es') ? "Por favor selecciona una ubicación válida." : "Please select a valid location.");
+      return;
+    }
+    objetivo = ubicaciones[idx];
+    document.getElementById("nav-compass-row").style.display = "flex";
+    document.getElementById("brujula").style.display = "flex";
+    document.getElementById("indicador-direccion").style.display = "flex";
+    const btnStop = document.getElementById("btn-detener"); if (btnStop) btnStop.style.display = "block";
+    document.getElementById("nombre-objetivo").innerText = `Ubicación: ${objetivo.nombre || "(sin nombre)"}`;
+    cerrarModal();
+
+    // Llevar al usuario a la pantalla principal
+    const cont = document.querySelector('.container'); if (cont) cont.scrollIntoView({behavior:'smooth', block:'start'});
+    const msg = document.getElementById('mensaje-status'); if (msg) msg.innerText = (lang==='es' ? `🧭 Navegando hacia: ${objetivo.nombre}` : `🧭 Navigating to: ${objetivo.nombre}`);
+
+    if (watcherId) try { navigator.geolocation.clearWatch(watcherId); } catch(e){}
+    watcherId = navigator.geolocation.watchPosition(actualizarNavegacion, err => {
+      alert("No se pudo acceder a la geolocalización.");
+    }, { enableHighAccuracy: true });
+
+    if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
+      const bnav = document.getElementById("btn-activar-nav"); if (bnav) bnav.style.display = "inline-block";
+    } else {
+      activarOrientacion();
+    }
+  }
+
+  // Distancias/rumbo + fusión con GPS
+  function actualizarNavegacion(pos) {
+    const lat1 = pos.coords.latitude * Math.PI / 180;
+    const lon1 = pos.coords.longitude * Math.PI / 180;
+    const lat2 = parseFloat(objetivo.lat) * Math.PI / 180;
+    const lon2 = parseFloat(objetivo.lon) * Math.PI / 180;
+
+    const dlat = lat2 - lat1, dlon = lon2 - lon1;
+
+    // Distancia Haversine
+    const a = Math.sin(dlat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dlon/2)**2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distancia = 6371000 * c;
+
+    const distanciaTexto = (distancia < 10000) ? `${Math.round(distancia)} m` : `${(distancia / 1000).toFixed(1)} km`;
+    document.getElementById("distancia-info").innerText = `Distancia: ${distanciaTexto}`;
+
+    if (distancia < 10 && !llegadaMostrada) {
+      llegadaMostrada = true;
+      if (confirm(textos[lang].llegaste_confirm)) { detenerNavegacion(); }
+    }
+
+    // Azimut hacia el objetivo
+    const y = Math.sin(dlon) * Math.cos(lat2);
+    const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dlon);
+    let brujula = Math.atan2(y, x) * 180/Math.PI;
+    brujula = ((brujula % 360) + 360) % 360; // norm
+    window.rumboObjetivo = brujula;
+
+    // Fusión con heading de GPS cuando hay movimiento
+    const gpsHeading = (typeof pos.coords.heading === 'number') ? pos.coords.heading : null; // 0=N
+    const speed = (typeof pos.coords.speed === 'number') ? pos.coords.speed : 0; // m/s
+
+    if (gpsHeading != null && speed >= 1.3) { // ~4.5 km/h
+      const blended = smoothAngle(headingFiltered, gpsHeading, 0.35);
+      fusedHeading = smoothAngle(fusedHeading || blended, blended, 0.30);
+    } else {
+      fusedHeading = headingFiltered;
+    }
+
+    const direccionTexto = obtenerDireccionCardinal(window.rumboObjetivo);
+    document.getElementById("direccion-info").innerText = `Dirección: ${direccionTexto}`;
+
+    actualizarRotacionFlecha();
+  }
+
+  function detenerNavegacion() {
+    if (watcherId) { try { navigator.geolocation.clearWatch(watcherId); } catch(e){} watcherId = null; }
+    document.getElementById("brujula").style.display = "none";
+    const row = document.getElementById("nav-compass-row"); if (row) row.style.display = "none";
+    const bnav = document.getElementById("btn-activar-nav"); if (bnav) bnav.style.display = "none";
+    document.getElementById("indicador-direccion").style.display = "none";
+    const btnStop = document.getElementById("btn-detener"); if (btnStop) btnStop.style.display = "none";
+    llegadaMostrada = false;
+  }
+
+  function obtenerDireccionCardinal(angulo) {
+    const direcciones = [
+      "Norte", "Norte-Noreste", "Noreste", "Este-Noreste",
+      "Este", "Este-Sureste", "Sureste", "Sur-Sureste",
+      "Sur", "Sur-Suroeste", "Suroeste", "Oeste-Suroeste",
+      "Oeste", "Oeste-Noroeste", "Noroeste", "Norte-Noroeste"
+    ];
+    const index = Math.round(angulo / 22.5) % 16;
+    return direcciones[index];
+  }
+
+  // --- Helpers de ángulos y suavizado ---
+  function norm(a){ a = a % 360; return a < 0 ? a + 360 : a; }
+  function delta(a, b){ let d = (b - a + 540) % 360 - 180; return d; }
+  function smoothAngle(prev, target, factor){ return norm(prev + delta(prev, target) * factor); }
+
+  // Derivar heading absoluto (0°=N, horario) desde alpha/beta/gamma
+  function computeAbsoluteHeading(alpha, beta, gamma){
+    const d2r = Math.PI/180;
+    const _x = (beta  || 0) * d2r; // inclinación
+    const _y = (gamma || 0) * d2r; // roll
+    const _z = (alpha || 0) * d2r; // yaw
+
+    const cX = Math.cos(_x), cY = Math.cos(_y), cZ = Math.cos(_z);
+    const sX = Math.sin(_x), sY = Math.sin(_y), sZ = Math.sin(_z);
+
+    const Vx = - cZ * sY - sZ * sX * cY;
+    const Vy = - sZ * sY + cZ * sX * cY;
+
+    let heading = Math.atan2(Vx, Vy) * 180/Math.PI;
+    if (heading < 0) heading += 360;
+
+    const so = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+    return norm(heading + (so || 0));
+  }
+
+  // Orientación del dispositivo (compás)
+  function activarOrientacion() {
+    if (__py_orientacion_activa) return;
+    if (!window.DeviceOrientationEvent) return;
+
+    const evtName = ('ondeviceorientationabsolute' in window) ? 'deviceorientationabsolute' : 'deviceorientation';
+
+    window.addEventListener(evtName, (e) => {
+      let h = null;
+
+      if (typeof e.webkitCompassHeading === 'number' && !isNaN(e.webkitCompassHeading)) {
+        h = e.webkitCompassHeading; // iOS Safari
+      } else if ((e.absolute === true || evtName === 'deviceorientationabsolute') && e.alpha != null) {
+        h = computeAbsoluteHeading(e.alpha, e.beta, e.gamma);
+      } else if (e.alpha != null) {
+        const so = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+        h = norm((360 - e.alpha) + (so || 0));
+      }
+
+      if (h != null) {
+        if (!headingReady) { headingFiltered = h; headingReady = true; }
+        else { headingFiltered = smoothAngle(headingFiltered, h, 0.15); }
+      }
+      actualizarRotacionFlecha();
+    }, true);
+
+    __py_orientacion_activa = true;
+  }
+
+  function actualizarRotacionFlecha() {
+    const objetivoVsYo = delta(fusedHeading || headingFiltered || 0, (typeof window.rumboObjetivo === 'number' ? window.rumboObjetivo : 0));
+    const targetAngle = norm(objetivoVsYo);
+    if (__arrowAngle === undefined || __arrowAngle === null) __arrowAngle = targetAngle;
+    __arrowAngle = smoothAngle(__arrowAngle, targetAngle, 0.25);
+    document.getElementById("flecha").style.transform = `rotate(${__arrowAngle}deg)`;
+  }
+
+  function solicitarPermisoOrientacion() {
+    if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission().then(state => {
+        if (state === 'granted') activarOrientacion();
+        else alert(lang==='es' ? "Permiso no otorgado." : "Permission not granted.");
+      }).catch(err => console.error("Error solicitando permiso:", err));
+    } else {
+      activarOrientacion();
+    }
+  }
+
+  // MODAL MAPA
+  function abrirModal() {
+    const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+    __modalUbicaciones = ubicaciones;
+    const busc = document.getElementById("buscador-ubicaciones");
+    if (busc) busc.value = "";
+    buildOpcionesModal("");
+    renderSugerencias("");
+    document.getElementById("modal").style.display = "flex";
+  }
+  function cerrarModal() { document.getElementById("modal").style.display = "none"; }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    aplicarTraduccion();
+    document.querySelectorAll('.lang-selector button').forEach(btn => {
+      btn.classList.toggle('selected', btn.dataset.lang === lang);
+    });
+  });
+
+  // Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(console.error);
+  }
+</script>
 </body>
 </html>
