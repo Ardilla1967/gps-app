@@ -114,6 +114,22 @@
     .sug-item{ padding:8px 10px; border-radius:8px; cursor:pointer; font-size:.95em; display:flex; gap:8px; align-items:center; }
     .sug-item:hover{ background:#f6f6f6; }
     .sug-empty{ color:#666; font-size:.9em; padding:6px 10px; }
+.icon { 
+    display:inline-flex; 
+    width: 1.4em; 
+    height: 1.4em; 
+    vertical-align: middle; 
+  }
+  .icon svg {
+    width: 100%; height: 100%;
+    stroke: currentColor; 
+    stroke-width: 2; 
+    stroke-linecap: round; 
+    stroke-linejoin: round; 
+    fill: none;
+  }
+  /* Para detalles “rellenos” puntuales dentro de algunos íconos */
+  .icon-fill { fill: currentColor; stroke: none; }
   </style>
 </head>
 <body>
@@ -152,44 +168,58 @@
   <input type="text" id="nombre" placeholder="Nombrar la Actual Ubicación (opcional)" />
   <div class="grid-buttons">
     <button id="btn-guardar" class="guardar" onclick="preGuardarUbicacion()">
-      <span style="display:inline-block;vertical-align:middle;width:1.2em;height:1.2em;">
-        <svg viewBox="0 0 24 24" fill="#1874fa" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M12 2C7.59 2 4 5.42 4 9.5c0 5.39 6.48 11.88 6.75 12.15.41.41 1.08.41 1.49 0C13.52 21.38 20 14.89 20 9.5 20 5.42 16.41 2 12 2zm0 17.77c-2.34-2.36-6-6.91-6-10.27 0-3.04 2.69-5.5 6-5.5s6 2.46 6 5.5c0 3.36-3.66 7.91-6 10.27z"/>
-          <circle cx="12" cy="9.5" r="2.5" fill="#4285f4"/>
-        </svg>
-      </span>
-      <span id="guardar-txt"></span>
-    </button>
+  <span class="icon" aria-hidden="true">
+    <!-- Pin + (guardar ubicación) -->
+    <svg viewBox="0 0 24 24">
+      <path d="M12 21s-6-5.5-6-10a6 6 0 1 1 12 0c0 4.5-6 10-6 10z"/>
+      <path d="M12 8v4M10 10h4"/>
+    </svg>
+  </span>
+  <span id="guardar-txt"></span>
+</button>
+
 
     <!-- Ver en mapa (abre modal de “Ver”) -->
     <button class="mapa" onclick="abrirModal()">
-      <span style="display:inline-block;vertical-align:middle;width:1.2em;height:1.2em;">
-        <svg viewBox="0 0 24 24" fill="#1874fa" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M20.5 3l-5.5 2.2L9 3 3.5 5v16l6-2.4 6 2.4 6.5-2.6V3zm-7 16.3l-5-2V4.7l5 2v12.6zm1-12.6l5-2v12.6l-5 2V6.7z"/>
-        </svg>
-      </span>
-      <span id="ver-txt"></span>
-    </button>
+  <span class="icon" aria-hidden="true">
+    <!-- Mapa plegado -->
+    <svg viewBox="0 0 24 24">
+      <path d="M9 3l6 3 6-3v15l-6 3-6-3-6 3V6l6-3z"/>
+      <path d="M9 3v15M15 6v15"/>
+    </svg>
+  </span>
+  <span id="ver-txt"></span>
+</button>
+
   </div>
 
   <div class="grid-buttons">
     <!-- Navegar (abre modal de navegación) con icono de BRÚJULA SVG -->
     <button class="navegar" onclick="abrirModalNavegacion()">
-      <span style="display:inline-block;vertical-align:middle;width:1.4em;height:1.4em;">
-        <!-- Compass SVG -->
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <circle cx="12" cy="12" r="9" fill="none" stroke="#111" stroke-width="2"/>
-          <polygon points="12,6 14.5,12 12,10.8 9.5,12" fill="#111"/>
-          <polygon points="12,18 9.5,12 12,13.2 14.5,12" fill="#777"/>
-        </svg>
-      </span>
-      <span id="navegar-txt"></span>
-    </button>
+  <span class="icon" aria-hidden="true">
+    <!-- Brújula -->
+    <svg viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9"/>
+      <!-- Aguja: mitad frontal “rellena” para dar contraste -->
+      <polygon class="icon-fill" points="12,7 14.8,12 12,10.9 9.2,12"/>
+      <polygon points="12,17 9.2,12 12,13.1 14.8,12"/>
+    </svg>
+  </span>
+  <span id="navegar-txt"></span>
+</button>
 
-    <button class="borrar" onclick="abrirModalBorrar()">
-      <img src="basurero-icon.png" alt="Borrar" style="height: 1.4em; margin-right: 6px; vertical-align: middle;" />
-      <span id="borrar-txt"></span>
-    </button>
+
+   <button class="borrar" onclick="abrirModalBorrar()">
+  <span class="icon" aria-hidden="true">
+    <!-- Papelera -->
+    <svg viewBox="0 0 24 24">
+      <path d="M3 6h18M8 6l1-2h6l1 2M6 6v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6"/>
+      <path d="M10 11v6M14 11v6"/>
+    </svg>
+  </span>
+  <span id="borrar-txt"></span>
+</button>
+
   </div>
 
   <div class="guardado" id="mensaje-status">Esperando acción...</div>
@@ -208,9 +238,16 @@
     <select id="selector-ubicaciones"></select>
     <!-- Icono “Mis-ubicaciones” movido aquí -->
     <button onclick="verSeleccionadaEnMapa()" id="btn-ver">
-      <img src="Mis-ubicaciones-icon.png" alt="Mapa" style="height:1.4em; margin-right:6px; vertical-align:middle;">
-      <span id="btn-ver-txt"></span>
-    </button>
+  <span class="icon" aria-hidden="true">
+    <!-- Mapa plegado (mismo que el de arriba para consistencia) -->
+    <svg viewBox="0 0 24 24">
+      <path d="M9 3l6 3 6-3v15l-6 3-6-3-6 3V6l6-3z"/>
+      <path d="M9 3v15M15 6v15"/>
+    </svg>
+  </span>
+  <span id="btn-ver-txt"></span>
+</button>
+
     <button onclick="cerrarModal()" id="btn-cancelar">Cancelar</button>
   </div>
 </div>
