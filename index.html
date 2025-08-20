@@ -114,22 +114,11 @@
     .sug-item{ padding:8px 10px; border-radius:8px; cursor:pointer; font-size:.95em; display:flex; gap:8px; align-items:center; }
     .sug-item:hover{ background:#f6f6f6; }
     .sug-empty{ color:#666; font-size:.9em; padding:6px 10px; }
-.icon { 
-    display:inline-flex; 
-    width: 1.4em; 
-    height: 1.4em; 
-    vertical-align: middle; 
-  }
-  .icon svg {
-    width: 100%; height: 100%;
-    stroke: currentColor; 
-    stroke-width: 2; 
-    stroke-linecap: round; 
-    stroke-linejoin: round; 
-    fill: none;
-  }
-  /* Para detalles “rellenos” puntuales dentro de algunos íconos */
-  .icon-fill { fill: currentColor; stroke: none; }
+
+    /* Iconos SVG modernos */
+    .icon { display:inline-flex; width: 1.4em; height: 1.4em; vertical-align: middle; }
+    .icon svg { width: 100%; height: 100%; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .icon-fill { fill: currentColor; stroke: none; }
   </style>
 </head>
 <body>
@@ -166,60 +155,41 @@
 
 <div class="container">
   <input type="text" id="nombre" placeholder="Nombrar la Actual Ubicación (opcional)" />
+
   <div class="grid-buttons">
+    <!-- Guardar -->
     <button id="btn-guardar" class="guardar" onclick="preGuardarUbicacion()">
-  <span class="icon" aria-hidden="true">
-    <!-- Pin + (guardar ubicación) -->
-    <svg viewBox="0 0 24 24">
-      <path d="M12 21s-6-5.5-6-10a6 6 0 1 1 12 0c0 4.5-6 10-6 10z"/>
-      <path d="M12 8v4M10 10h4"/>
-    </svg>
-  </span>
-  <span id="guardar-txt"></span>
-</button>
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-10a6 6 0 1 1 12 0c0 4.5-6 10-6 10z"/><path d="M12 8v4M10 10h4"/></svg>
+      </span>
+      <span id="guardar-txt"></span>
+    </button>
 
-
-    <!-- Ver en mapa (abre modal de “Ver”) -->
+    <!-- Ver en mapa -->
     <button class="mapa" onclick="abrirModal()">
-  <span class="icon" aria-hidden="true">
-    <!-- Mapa plegado -->
-    <svg viewBox="0 0 24 24">
-      <path d="M9 3l6 3 6-3v15l-6 3-6-3-6 3V6l6-3z"/>
-      <path d="M9 3v15M15 6v15"/>
-    </svg>
-  </span>
-  <span id="ver-txt"></span>
-</button>
-
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M9 3l6 3 6-3v15l-6 3-6-3-6 3V6l6-3z"/><path d="M9 3v15M15 6v15"/></svg>
+      </span>
+      <span id="ver-txt"></span>
+    </button>
   </div>
 
   <div class="grid-buttons">
-    <!-- Navegar (abre modal de navegación) con icono de BRÚJULA SVG -->
+    <!-- Navegar -->
     <button class="navegar" onclick="abrirModalNavegacion()">
-  <span class="icon" aria-hidden="true">
-    <!-- Brújula -->
-    <svg viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="9"/>
-      <!-- Aguja: mitad frontal “rellena” para dar contraste -->
-      <polygon class="icon-fill" points="12,7 14.8,12 12,10.9 9.2,12"/>
-      <polygon points="12,17 9.2,12 12,13.1 14.8,12"/>
-    </svg>
-  </span>
-  <span id="navegar-txt"></span>
-</button>
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polygon class="icon-fill" points="12,7 14.8,12 12,10.9 9.2,12"/><polygon points="12,17 9.2,12 12,13.1 14.8,12"/></svg>
+      </span>
+      <span id="navegar-txt"></span>
+    </button>
 
-
-   <button class="borrar" onclick="abrirModalBorrar()">
-  <span class="icon" aria-hidden="true">
-    <!-- Papelera -->
-    <svg viewBox="0 0 24 24">
-      <path d="M3 6h18M8 6l1-2h6l1 2M6 6v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6"/>
-      <path d="M10 11v6M14 11v6"/>
-    </svg>
-  </span>
-  <span id="borrar-txt"></span>
-</button>
-
+    <!-- Borrar -->
+    <button class="borrar" onclick="abrirModalBorrar()">
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6l1-2h6l1 2M6 6v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6"/><path d="M10 11v6M14 11v6"/></svg>
+      </span>
+      <span id="borrar-txt"></span>
+    </button>
   </div>
 
   <div class="guardado" id="mensaje-status">Esperando acción...</div>
@@ -229,30 +199,24 @@
   </div>
 </div>
 
-<!-- Modal Ver en mapa (SIN botón navegar) -->
+<!-- Modal Ver en mapa -->
 <div id="modal">
   <div class="modal-content">
     <h3 id="modal-title">Elige ubicación a ver en el mapa</h3>
     <input id="buscador-ubicaciones" type="text" placeholder="" oninput="filtrarModal()" onkeydown="buscarKeydown(event)" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin:8px 0;">
     <div id="sugerencias-ubicaciones" class="sugerencias"></div>
     <select id="selector-ubicaciones"></select>
-    <!-- Icono “Mis-ubicaciones” movido aquí -->
     <button onclick="verSeleccionadaEnMapa()" id="btn-ver">
-  <span class="icon" aria-hidden="true">
-    <!-- Mapa plegado (mismo que el de arriba para consistencia) -->
-    <svg viewBox="0 0 24 24">
-      <path d="M9 3l6 3 6-3v15l-6 3-6-3-6 3V6l6-3z"/>
-      <path d="M9 3v15M15 6v15"/>
-    </svg>
-  </span>
-  <span id="btn-ver-txt"></span>
-</button>
-
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M9 3l6 3 6-3v15l-6 3-6-3-6 3V6l6-3z"/><path d="M9 3v15M15 6v15"/></svg>
+      </span>
+      <span id="btn-ver-txt"></span>
+    </button>
     <button onclick="cerrarModal()" id="btn-cancelar">Cancelar</button>
   </div>
 </div>
 
-<!-- Nuevo Modal Navegación (para el botón principal) -->
+<!-- Modal Navegación -->
 <div id="modal-nav">
   <div class="modal-content">
     <h3 id="modal-nav-title">Selecciona ubicación para navegar</h3>
@@ -388,17 +352,14 @@
     document.getElementById("borrar-txt").innerText = textos[lang].borrar;
     document.getElementById("mensaje-status").innerText = textos[lang].status_inicio;
 
-    // Ver en mapa (texto en <span> para no borrar el <img>)
     document.getElementById("modal-title").innerText = textos[lang].modal_titulo;
     const verTxt = document.getElementById("btn-ver-txt"); if (verTxt) verTxt.innerText = textos[lang].modal_ver;
     document.getElementById("btn-cancelar").innerText = textos[lang].modal_cancelar;
 
-    // Navegación
     document.getElementById("modal-nav-title").innerText = textos[lang].modal_nav_titulo;
     document.getElementById("btn-iniciar-nav").innerText = textos[lang].modal_nav_iniciar;
     document.getElementById("btn-cancelar-nav").innerText = textos[lang].btn_cancelar;
 
-    // Borrar
     document.getElementById("modal-borrar-title").innerText = textos[lang].modal_borrar_title;
     document.getElementById("btn-borrar-seleccionar").innerText = textos[lang].btn_seleccionar;
     document.getElementById("btn-borrar-todas").innerText = textos[lang].btn_todas;
@@ -407,10 +368,10 @@
     document.getElementById("btn-borrar-una").innerText = textos[lang].btn_borrar_una;
     document.getElementById("btn-borrar-cancelar2").innerText = textos[lang].btn_cancelar;
 
-    // Otros
     document.getElementById("mensaje-sin-nombre").innerText = textos[lang].sin_nombre;
     document.getElementById("btn-aceptar-sin-nombre").innerText = textos[lang].aceptar;
     document.getElementById("btn-cancelar-sin-nombre").innerText = textos[lang].btn_cancelar;
+
     const pmsg = document.getElementById('permiso-msg'); if (pmsg) pmsg.innerText = textos[lang].permiso_msg;
     const busc1 = document.getElementById('buscador-ubicaciones'); if (busc1) busc1.placeholder = textos[lang].buscar;
     const busc2 = document.getElementById('buscador-ubicaciones-nav'); if (busc2) busc2.placeholder = textos[lang].buscar;
@@ -563,7 +524,7 @@
       empty.innerText = (lang==='es' ? 'Sin resultados' : 'No results');
       cont.appendChild(empty);
     }
-    cont.classList.toggle('sugerencias', true);
+    cont.classList.add('sugerencias');
     cont.style.display = (filterText && filterText.trim() !== '') ? 'block' : 'none';
   }
   function seleccionarEnModal(idx){
@@ -583,7 +544,6 @@
       }
     }
   }
-
   function abrirModal() {
     const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
     __modalUbicaciones = ubicaciones;
@@ -595,19 +555,7 @@
   }
   function cerrarModal() { document.getElementById("modal").style.display = "none"; }
 
-  function verSeleccionadaEnMapa() {
-    const idx = document.getElementById("selector-ubicaciones").value;
-    const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
-    if (idx === "" || ubicaciones[idx] === undefined) {
-      alert((lang === 'es') ? "Por favor selecciona una ubicación válida." : "Please select a valid location.");
-      return;
-    }
-    const { lat, lon } = ubicaciones[idx];
-    window.open(`https://maps.google.com/?q=${lat},${lon}`, "_blank");
-    cerrarModal();
-  }
-
-  // --- Nuevo MODAL de NAVEGACIÓN (búsqueda + opciones) ---
+  // --- Modal NAVEGACIÓN (búsqueda + opciones) ---
   let __modalUbicacionesNav = [];
   function buildOpcionesModalNav(filterText) {
     const selector = document.getElementById("selector-ubicaciones-nav");
@@ -678,7 +626,6 @@
       }
     }
   }
-
   function abrirModalNavegacion() {
     const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
     __modalUbicacionesNav = ubicaciones;
@@ -690,17 +637,7 @@
   }
   function cerrarModalNav() { document.getElementById("modal-nav").style.display = "none"; }
 
-  function iniciarNavegacionDesdeModalNav() {
-    const idx = document.getElementById("selector-ubicaciones-nav").value;
-    const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
-    if (idx === "" || ubicaciones[idx] === undefined) {
-      alert((lang === 'es') ? "Por favor selecciona una ubicación válida." : "Please select a valid location.");
-      return;
-    }
-    iniciarNavegacionConIndice(parseInt(idx,10));
-  }
-
-  // Navegación (compartida)
+  // Navegación
   let objetivo = null;
   let watcherId = null;
   let llegadaMostrada = false;
@@ -712,6 +649,16 @@
   let __arrowAngle = 0;        // ángulo mostrado (suavizado)
   let __py_orientacion_activa = false;
 
+  function iniciarNavegacionDesdeModalNav() {
+    const idx = document.getElementById("selector-ubicaciones-nav").value;
+    const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+    if (idx === "" || ubicaciones[idx] === undefined) {
+      alert((lang === 'es') ? "Por favor selecciona una ubicación válida." : "Please select a valid location.");
+      return;
+    }
+    iniciarNavegacionConIndice(parseInt(idx,10));
+  }
+
   function iniciarNavegacionConIndice(idx) {
     llegadaMostrada = false;
     const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
@@ -722,7 +669,6 @@
     objetivo = ubicaciones[idx];
 
     document.getElementById("modal-nav").style.display = "none";
-
     document.getElementById("nav-compass-row").style.display = "flex";
     document.getElementById("brujula").style.display = "flex";
     document.getElementById("indicador-direccion").style.display = "flex";
@@ -811,12 +757,12 @@
     return direcciones[index];
   }
 
-  // --- Helpers de ángulos y suavizado ---
+  // Helpers ángulos
   function norm(a){ a = a % 360; return a < 0 ? a + 360 : a; }
   function delta(a, b){ let d = (b - a + 540) % 360 - 180; return d; }
   function smoothAngle(prev, target, factor){ return norm(prev + delta(prev, target) * factor); }
 
-  // Derivar heading absoluto (0°=N, horario) desde alpha/beta/gamma
+  // Heading absoluto desde alpha/beta/gamma
   function computeAbsoluteHeading(alpha, beta, gamma){
     const d2r = Math.PI/180;
     const _x = (beta  || 0) * d2r;
@@ -877,29 +823,11 @@
       activarOrientacion();
     }
   }
+  function aceptarPermisoOrientacion(){ solicitarPermisoOrientacion(); }
+  function cerrarModalPermiso(){ const el = document.getElementById('modal-permiso'); if (el) el.style.display='none'; }
 
-  // Abrir/Cerrar modales
-  function abrirModal() {
-    const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
-    __modalUbicaciones = ubicaciones;
-    const busc = document.getElementById("buscador-ubicaciones");
-    if (busc) busc.value = "";
-    buildOpcionesModal("");
-    renderSugerencias("");
-    document.getElementById("modal").style.display = "flex";
-  }
-  function cerrarModal() { document.getElementById("modal").style.display = "none"; }
-
-  function abrirModalNavegacion() {
-    const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
-    __modalUbicacionesNav = ubicaciones;
-    const busc = document.getElementById("buscador-ubicaciones-nav");
-    if (busc) busc.value = "";
-    buildOpcionesModalNav("");
-    renderSugerenciasNav("");
-    document.getElementById("modal-nav").style.display = "flex";
-  }
-  function cerrarModalNav() { document.getElementById("modal-nav").style.display = "none"; }
+  // --- Abrir / Cerrar Modales (definición única) ---
+  // (Las funciones abrirModal / abrirModalNavegacion ya están definidas arriba; no duplicarlas)
 
   // Inicio
   document.addEventListener('DOMContentLoaded', () => {
@@ -909,9 +837,24 @@
     });
   });
 
-  // Service Worker
+  // Service Worker (única vez, con versión y auto-update)
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(console.error);
+    const swVersion = '11';
+    navigator.serviceWorker.register('./sw.js?v=' + swVersion, { scope: './' })
+      .then(reg => {
+        function refreshNow() {
+          if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+        }
+        if (reg.waiting) refreshNow();
+        reg.addEventListener('updatefound', () => {
+          const sw = reg.installing;
+          sw?.addEventListener('statechange', () => {
+            if (sw.state === 'installed' && navigator.serviceWorker.controller) refreshNow();
+          });
+        });
+        navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
+      })
+      .catch(console.error);
   }
 </script>
 </body>
