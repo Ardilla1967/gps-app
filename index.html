@@ -153,18 +153,19 @@
   <div class="grid-buttons">
     <button id="btn-guardar" class="guardar" onclick="preGuardarUbicacion()">
       <span style="display:inline-block;vertical-align:middle;width:1.2em;height:1.2em;">
-        <svg viewBox="0 0 24 24" fill="#1874fa" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 24 24" fill="#1874fa" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M12 2C7.59 2 4 5.42 4 9.5c0 5.39 6.48 11.88 6.75 12.15.41.41 1.08.41 1.49 0C13.52 21.38 20 14.89 20 9.5 20 5.42 16.41 2 12 2zm0 17.77c-2.34-2.36-6-6.91-6-10.27 0-3.04 2.69-5.5 6-5.5s6 2.46 6 5.5c0 3.36-3.66 7.91-6 10.27z"/>
           <circle cx="12" cy="9.5" r="2.5" fill="#4285f4"/>
         </svg>
       </span>
       <span id="guardar-txt"></span>
     </button>
+
+    <!-- Ver en mapa (abre modal de “Ver”) -->
     <button class="mapa" onclick="abrirModal()">
       <span style="display:inline-block;vertical-align:middle;width:1.2em;height:1.2em;">
-        <svg viewBox="0 0 24 24" fill="#1874fa" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2C7.59 2 4 5.42 4 9.5c0 5.39 6.48 11.88 6.75 12.15.41.41 1.08.41 1.49 0C13.52 21.38 20 14.89 20 9.5 20 5.42 16.41 2 12 2zm0 17.77c-2.34-2.36-6-6.91-6-10.27 0-3.04 2.69-5.5 6-5.5s6 2.46 6 5.5c0 3.36-3.66 7.91-6 10.27z"/>
-          <circle cx="12" cy="9.5" r="2.5" fill="#4285f4"/>
+        <svg viewBox="0 0 24 24" fill="#1874fa" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M20.5 3l-5.5 2.2L9 3 3.5 5v16l6-2.4 6 2.4 6.5-2.6V3zm-7 16.3l-5-2V4.7l5 2v12.6zm1-12.6l5-2v12.6l-5 2V6.7z"/>
         </svg>
       </span>
       <span id="ver-txt"></span>
@@ -172,10 +173,19 @@
   </div>
 
   <div class="grid-buttons">
+    <!-- Navegar (abre modal de navegación) con icono de BRÚJULA SVG -->
     <button class="navegar" onclick="abrirModalNavegacion()">
-      <img src="Mis-ubicaciones-icon.png" alt="Navegar" style="height: 1.4em; margin-right: 6px; vertical-align: middle;" />
+      <span style="display:inline-block;vertical-align:middle;width:1.4em;height:1.4em;">
+        <!-- Compass SVG -->
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" fill="none" stroke="#111" stroke-width="2"/>
+          <polygon points="12,6 14.5,12 12,10.8 9.5,12" fill="#111"/>
+          <polygon points="12,18 9.5,12 12,13.2 14.5,12" fill="#777"/>
+        </svg>
+      </span>
       <span id="navegar-txt"></span>
     </button>
+
     <button class="borrar" onclick="abrirModalBorrar()">
       <img src="basurero-icon.png" alt="Borrar" style="height: 1.4em; margin-right: 6px; vertical-align: middle;" />
       <span id="borrar-txt"></span>
@@ -196,7 +206,11 @@
     <input id="buscador-ubicaciones" type="text" placeholder="" oninput="filtrarModal()" onkeydown="buscarKeydown(event)" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin:8px 0;">
     <div id="sugerencias-ubicaciones" class="sugerencias"></div>
     <select id="selector-ubicaciones"></select>
-    <button onclick="verSeleccionadaEnMapa()" id="btn-ver">Ir a Mapa</button>
+    <!-- Icono “Mis-ubicaciones” movido aquí -->
+    <button onclick="verSeleccionadaEnMapa()" id="btn-ver">
+      <img src="Mis-ubicaciones-icon.png" alt="Mapa" style="height:1.4em; margin-right:6px; vertical-align:middle;">
+      <span id="btn-ver-txt"></span>
+    </button>
     <button onclick="cerrarModal()" id="btn-cancelar">Cancelar</button>
   </div>
 </div>
@@ -337,9 +351,9 @@
     document.getElementById("borrar-txt").innerText = textos[lang].borrar;
     document.getElementById("mensaje-status").innerText = textos[lang].status_inicio;
 
-    // Ver en mapa
+    // Ver en mapa (texto en <span> para no borrar el <img>)
     document.getElementById("modal-title").innerText = textos[lang].modal_titulo;
-    document.getElementById("btn-ver").innerText = textos[lang].modal_ver;
+    const verTxt = document.getElementById("btn-ver-txt"); if (verTxt) verTxt.innerText = textos[lang].modal_ver;
     document.getElementById("btn-cancelar").innerText = textos[lang].modal_cancelar;
 
     // Navegación
