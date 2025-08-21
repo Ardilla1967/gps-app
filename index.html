@@ -116,9 +116,19 @@
     .sug-empty{ color:#666; font-size:.9em; padding:6px 10px; }
 
     /* Iconos SVG modernos */
-    .icon { display:inline-flex; width: 1.4em; height: 1.4em; vertical-align: middle; }
-    .icon svg { width: 100%; height: 100%; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
-    .icon-fill { fill: currentColor; stroke: none; }
+/* === Iconos circulares modernos === */
+.icon {
+  display:inline-block;
+  width: 1.6em;
+  height: 1.6em;
+  vertical-align: middle;
+  flex: 0 0 auto;
+}
+.icon svg { width:100%; height:100%; }
+.icon .bg { fill: var(--ico, #3A86FF); }   /* color del círculo (personalizable por botón) */
+.icon .fg { fill: #fff; stroke: none; }    /* pictograma en blanco */
+.icon .st { stroke:#fff; stroke-width:2.8; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+
   </style>
 </head>
 <body>
@@ -129,7 +139,18 @@
     <span class="norte">N</span><span class="este">E</span><span class="sur">S</span><span class="oeste">O</span>
     <img id="flecha" src="Flecha.png" alt="Flecha" />
   </div>
-  <button id="btn-activar-nav" onclick="aceptarPermisoOrientacion()" style="display:none; background:#f1db13; color:#111; border:none; font-weight:bold; border-radius:12px; padding:10px;">Activar navegación</button>
+<button id="btn-activar-nav" onclick="aceptarPermisoOrientacion()"
+        style="display:none; background:#f1db13; color:#111; border:none; font-weight:bold; border-radius:12px; padding:10px;">
+  <span class="icon" style="--ico:#00BCD4" aria-hidden="true">
+    <svg viewBox="0 0 48 48">
+      <circle class="bg" cx="24" cy="24" r="22"/>
+      <!-- brújula -->
+      <circle class="fg" cx="24" cy="24" r="3"/>
+      <path class="fg" d="M24 14l6 10-6-2-6 2 6-10z"/>
+    </svg>
+  </span>
+  <span id="btn-activar-nav-txt"></span>
+</button>
 </div>
 
 <!-- Indicador de Dirección -->
@@ -137,7 +158,16 @@
   <div id="nombre-objetivo" style="color: white; font-size: 1.1em; margin-top: 8px;">Ubicación: —</div>
   <div id="distancia-info" style="color: rgb(234, 236, 240); font-size: 1.1em; margin-top: 8px;">Distancia: 0 m</div>
   <div id="direccion-info" style="color: white; font-size: 1em; margin-top: 4px;">Dirección: —</div>
-  <button id="btn-detener" onclick="detenerNavegacion()" style="display:none; background:#f3f3f3; color:#444; border:none; border-radius:12px; padding:10px; margin-top:10px; font-weight:bold;">Detener navegación</button>
+  <button id="btn-detener" onclick="detenerNavegacion()"
+        style="display:none; background:#f3f3f3; color:#444; border:none; border-radius:12px; padding:10px; margin-top:10px; font-weight:bold;">
+  <span class="icon" style="--ico:#90A4AE" aria-hidden="true">
+    <svg viewBox="0 0 48 48">
+      <circle class="bg" cx="24" cy="24" r="22"/>
+      <rect class="fg" x="16" y="16" width="16" height="16" rx="3" ry="3"/>
+    </svg>
+  </span>
+  <span id="btn-detener-txt"></span>
+</button>
 </div>
 
 <!-- Idioma -->
@@ -158,38 +188,59 @@
 
   <div class="grid-buttons">
     <!-- Guardar -->
-    <button id="btn-guardar" class="guardar" onclick="preGuardarUbicacion()">
-      <span class="icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-10a6 6 0 1 1 12 0c0 4.5-6 10-6 10z"/><path d="M12 8v4M10 10h4"/></svg>
-      </span>
-      <span id="guardar-txt"></span>
-    </button>
+<button id="btn-guardar" class="guardar" onclick="preGuardarUbicacion()">
+  <span class="icon" style="--ico:#3A86FF" aria-hidden="true">
+    <svg viewBox="0 0 48 48">
+      <circle class="bg" cx="24" cy="24" r="22"/>
+      <!-- pin -->
+      <path class="fg" d="M24 11a11 11 0 0 0-11 11c0 7.5 11 17 11 17s11-9.5 11-17a11 11 0 0 0-11-11zm0 16a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/>
+      <!-- + -->
+      <path class="st" d="M24 15v6M21 18h6"/>
+    </svg>
+  </span>
+  <span id="guardar-txt"></span>
+</button>
 
     <!-- Ver en mapa -->
-    <button class="mapa" onclick="abrirModal()">
-      <span class="icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M9 3l6 3 6-3v15l-6 3-6-3-6 3V6l6-3z"/><path d="M9 3v15M15 6v15"/></svg>
-      </span>
-      <span id="ver-txt"></span>
-    </button>
+<button class="mapa" onclick="abrirModal()">
+  <span class="icon" style="--ico:#7BCB4B" aria-hidden="true">
+    <svg viewBox="0 0 48 48">
+      <circle class="bg" cx="24" cy="24" r="22"/>
+      <!-- mapa plegado -->
+      <path class="fg" d="M15 13l9 4 9-4v20l-9 4-9-4-9 4V17l9-4z"/>
+      <path class="fg" d="M15 13v20M24 17v20" style="opacity:.9"/>
+    </svg>
+  </span>
+  <span id="ver-txt"></span>
+</button>
   </div>
 
   <div class="grid-buttons">
     <!-- Navegar -->
-    <button class="navegar" onclick="abrirModalNavegacion()">
-      <span class="icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polygon class="icon-fill" points="12,7 14.8,12 12,10.9 9.2,12"/><polygon points="12,17 9.2,12 12,13.1 14.8,12"/></svg>
-      </span>
-      <span id="navegar-txt"></span>
-    </button>
+ <button class="navegar" onclick="abrirModalNavegacion()">
+  <span class="icon" style="--ico:#5C6BC0" aria-hidden="true">
+    <svg viewBox="0 0 48 48">
+      <circle class="bg" cx="24" cy="24" r="22"/>
+      <!-- flecha de navegación -->
+      <path class="fg" d="M36 12L26.5 36c-.3.8-1.4 1-2 .3l-4.6-4.6c-.3-.3-.4-.7-.3-1.1L36 12z"/>
+      <circle class="fg" cx="24" cy="24" r="2" style="opacity:.2"/>
+    </svg>
+  </span>
+  <span id="navegar-txt"></span>
+</button>
 
     <!-- Borrar -->
-    <button class="borrar" onclick="abrirModalBorrar()">
-      <span class="icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6l1-2h6l1 2M6 6v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6"/><path d="M10 11v6M14 11v6"/></svg>
-      </span>
-      <span id="borrar-txt"></span>
-    </button>
+  <button class="borrar" onclick="abrirModalBorrar()">
+  <span class="icon" style="--ico:#FF7043" aria-hidden="true">
+    <svg viewBox="0 0 48 48">
+      <circle class="bg" cx="24" cy="24" r="22"/>
+      <!-- papelera -->
+      <path class="st" d="M15 18h18M19 18l1.2-3h7.6l1.2 3M18 18v15a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V18"/>
+      <path class="st" d="M22 23v8M26 23v8"/>
+    </svg>
+  </span>
+  <span id="borrar-txt"></span>
+</button>
   </div>
 
   <div class="guardado" id="mensaje-status">Esperando acción...</div>
@@ -207,11 +258,15 @@
     <div id="sugerencias-ubicaciones" class="sugerencias"></div>
     <select id="selector-ubicaciones"></select>
     <button onclick="verSeleccionadaEnMapa()" id="btn-ver">
-      <span class="icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M9 3l6 3 6-3v15l-6 3-6-3-6 3V6l6-3z"/><path d="M9 3v15M15 6v15"/></svg>
-      </span>
-      <span id="btn-ver-txt"></span>
-    </button>
+  <span class="icon" style="--ico:#7BCB4B" aria-hidden="true">
+    <svg viewBox="0 0 48 48">
+      <circle class="bg" cx="24" cy="24" r="22"/>
+      <path class="fg" d="M15 13l9 4 9-4v20l-9 4-9-4-9 4V17l9-4z"/>
+      <path class="fg" d="M15 13v20M24 17v20" style="opacity:.9"/>
+    </svg>
+  </span>
+  <span id="btn-ver-txt"></span>
+</button>
     <button onclick="cerrarModal()" id="btn-cancelar">Cancelar</button>
   </div>
 </div>
