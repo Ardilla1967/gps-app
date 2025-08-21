@@ -839,7 +839,7 @@
 
   // Service Worker (única vez, con versión y auto-update)
   if ('serviceWorker' in navigator) {
-    const swVersion = '11';
+    const swVersion = '12';
     navigator.serviceWorker.register('./sw.js?v=' + swVersion, { scope: './' })
       .then(reg => {
         function refreshNow() {
