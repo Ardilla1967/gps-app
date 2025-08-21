@@ -1,5 +1,5 @@
 // Sube el número en cada despliegue
-const VERSION = 12;
+const VERSION = 13;
 const CACHE_NAME = `puntoya-v${VERSION}`;
 
 const ASSETS = [
