@@ -929,6 +929,215 @@
       })
       .catch(console.error);
   }
+
+
+/* ========= RASTREO LOCAL SIN GPS (Dead-reckoning por pasos) ========= */
+
+// Estado
+let LOCAL_ACTIVE = false;
+let L_pose = { x:0, y:0 };        // metros (y=Norte, x=Este)
+let L_origin = { x:0, y:0 };
+let L_heading = 0;                // 0=N, horario (grados) — reusa tu brújula
+let L_path = [];                  // breadcrumbs: {x,y,t}
+let L_stepLen = 0.75;             // metros por paso (ajustable en UI si quieres)
+let L_lastStepAt = 0;
+let L_canvas, L_ctx, L_status, L_dist, L_rumbo, L_panel;
+
+// Permisos iOS para motion (además de tu permiso de orientación)
+async function ensureMotionPermission() {
+  try {
+    if (typeof DeviceMotionEvent?.requestPermission === 'function') {
+      const s = await DeviceMotionEvent.requestPermission();
+      return s === 'granted';
+    }
+    return true; // Android/desktop
+  } catch { return false; }
+}
+
+// Conectar/desconectar sensores de pasos
+function attachStepSensor(){
+  window.addEventListener('devicemotion', onMotion, { passive:true });
+}
+function detachStepSensor(){
+  window.removeEventListener('devicemotion', onMotion, { passive:true });
+}
+
+// Detector de pasos (simple): picos de aceleración vertical
+let lp = 0; // low-pass de magnitud
+function onMotion(e){
+  const a = e.accelerationIncludingGravity || e.acceleration;
+  if (!a) return;
+  const mag = Math.sqrt((a.x||0)**2+(a.y||0)**2+(a.z||0)**2);
+  lp = 0.9*lp + 0.1*mag;
+  const high = mag - lp;                 // high-pass rudimentario
+  const now = performance.now();
+  if (high > 1.0 && (now - L_lastStepAt) > 280) { // umbral + periodo refractario
+    L_lastStepAt = now;
+    onStep();
+  }
+}
+
+// Un paso → avanzar L_stepLen hacia el heading actual
+function onStep(){
+  const rad = (L_heading * Math.PI) / 180;
+  L_pose.x += L_stepLen * Math.sin(rad);
+  L_pose.y += L_stepLen * Math.cos(rad);
+  L_path.push({ x:L_pose.x, y:L_pose.y, t:Date.now() });
+  localRender();
+  // Si tu brújula está visible, reutiliza tu flecha: rumbo a origen
+  window.rumboObjetivo = bearingToOrigin(); // reutiliza tu UI de brújula
+}
+
+// Rumbo (0=N) desde posición actual al origen local
+function bearingToOrigin(){
+  const dx = L_origin.x - L_pose.x;
+  const dy = L_origin.y - L_pose.y;
+  let ang = Math.atan2(dx, dy) * 180/Math.PI;
+  if (ang < 0) ang += 360;
+  return ang;
+}
+
+// Texto cardinal (reusa tu función si prefieres)
+function cardinal(ang){
+  const d = ["N","NNE","NE","ENE","E","ESE","SE","SSE",
+             "S","SSO","SO","OSO","O","ONO","NO","NNO"];
+  return d[Math.round(ang/22.5)%16];
+}
+
+// Render mini-mapa
+function localRender(){
+  if (!L_ctx) return;
+  const w=L_canvas.width, h=L_canvas.height;
+  L_ctx.clearRect(0,0,w,h);
+  // Ejes & origen
+  L_ctx.fillStyle = "#eef2ff";
+  L_ctx.fillRect(0,0,w,h);
+
+  // Auto-escala para que todo el path quepa (20px margen)
+  const pad = 20;
+  let minx=0, maxx=0, miny=0, maxy=0;
+  const pts = [{x:0,y:0}, ...L_path, {x:L_pose.x,y:L_pose.y}];
+  pts.forEach(p=>{ minx=Math.min(minx,p.x); maxx=Math.max(maxx,p.x);
+                   miny=Math.min(miny,p.y); maxy=Math.max(maxy,p.y); });
+  const span = Math.max(maxx-minx, maxy-miny, 10);
+  const scale = (Math.min(w,h)-2*pad) / span;
+  const cx = w/2, cy = h/2;
+  function toScreen(p){
+    // Y hacia arriba en pantalla: invertimos
+    return { x: cx + (p.x - (minx+maxx)/2)*scale,
+             y: cy - (p.y - (miny+maxy)/2)*scale };
+  }
+
+  // Path
+  L_ctx.strokeStyle = "#3A86FF";
+  L_ctx.lineWidth = 2;
+  L_ctx.beginPath();
+  let p0 = toScreen({x:0,y:0});
+  L_ctx.moveTo(p0.x, p0.y);
+  for (const p of L_path){
+    const s = toScreen(p);
+    L_ctx.lineTo(s.x, s.y);
+  }
+  L_ctx.stroke();
+
+  // Origen
+  L_ctx.fillStyle = "#43a047";
+  const o = toScreen({x:0,y:0});
+  L_ctx.beginPath(); L_ctx.arc(o.x,o.y,5,0,Math.PI*2); L_ctx.fill();
+
+  // Posición actual
+  L_ctx.fillStyle = "#e53935";
+  const c = toScreen(L_pose);
+  L_ctx.beginPath(); L_ctx.arc(c.x,c.y,5,0,Math.PI*2); L_ctx.fill();
+
+  // Datos
+  const dist = Math.hypot(L_pose.x, L_pose.y);
+  const rumbo = bearingToOrigin();
+  L_dist.textContent = `Distancia al origen: ${dist<1000 ? dist.toFixed(1)+' m' : (dist/1000).toFixed(2)+' km'}`;
+  L_rumbo.textContent = `Rumbo al origen: ${cardinal(rumbo)} (${Math.round(rumbo)}°)`;
+  if (typeof window.actualizarRotacionFlecha === 'function') {
+    window.rumboObjetivo = rumbo; // tu flecha apunta a origen
+    window.actualizarRotacionFlecha();
+  }
+}
+
+// UI
+async function toggleLocalMode(){
+  if (!LOCAL_ACTIVE) {
+    // Pedir permisos de orientación/motion (iOS)
+    const okMotion = await ensureMotionPermission();
+    if (!okMotion) { alert('Se necesitan permisos de movimiento para rastreo local.'); return; }
+    if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
+      try {
+        const s = await DeviceOrientationEvent.requestPermission();
+        if (s !== 'granted') { alert('Permite la orientación del dispositivo.'); return; }
+        activarOrientacion?.(); // ya la tienes implementada
+      } catch {}
+    } else {
+      activarOrientacion?.();
+    }
+    startLocal();
+  } else {
+    stopLocal();
+  }
+}
+
+function startLocal(){
+  L_panel = document.getElementById('local-panel');
+  L_canvas = document.getElementById('local-canvas');
+  L_ctx = L_canvas.getContext('2d');
+  L_status = document.getElementById('local-status');
+  L_dist = document.getElementById('local-dist');
+  L_rumbo = document.getElementById('local-rumbo');
+
+  // Origen en (0,0); posición actual se resetea
+  L_pose = {x:0,y:0}; L_origin = {x:0,y:0}; L_path = [];
+  L_status.textContent = 'Sin señal GPS: rastreo local ACTIVO';
+  L_panel.style.display = 'block';
+  document.getElementById('btn-local').textContent = 'Detener modo sin GPS';
+
+  // “Escuchar” brújula de tu app: headingFiltered/fusedHeading si existen
+  // Actualiza L_heading en tu bucle de orientación
+  const _oldUpdate = window.actualizarRotacionFlecha;
+  window.actualizarRotacionFlecha = function(){
+    // heading “real” de tu app: fusedHeading || headingFiltered (si existen)
+    const h = (window.fusedHeading ?? window.headingFiltered ?? 0);
+    L_heading = (typeof h === 'number') ? h : 0;
+    if (_oldUpdate) _oldUpdate();
+  };
+
+  attachStepSensor();
+  LOCAL_ACTIVE = true;
+  localRender();
+
+  // Si vuelve GPS: reanclar (transformación simple a lat/lon)
+  try {
+    navigator.geolocation.getCurrentPosition(()=>{},()=>{}, { enableHighAccuracy:true, timeout:5000 });
+  } catch {}
+}
+
+function stopLocal(){
+  detachStepSensor();
+  LOCAL_ACTIVE = false;
+  document.getElementById('btn-local').textContent = '🧭 Modo sin GPS';
+  if (L_panel) { L_panel.style.display = 'none'; }
+}
+
+function localMark(){
+  L_path.push({ x:L_pose.x, y:L_pose.y, t:Date.now(), mark:true });
+  localRender();
+}
+
+function localReset(){
+  if (!confirm('Reiniciar origen y borrar trazas locales?')) return;
+  L_pose = {x:0,y:0}; L_origin = {x:0,y:0}; L_path = [];
+  localRender();
+}
+
+/* --- Reanclaje cuando vuelve GPS (opcional, básico) ---
+   Si llega una posición con buena precisión, puedes guardar lat/lon actuales
+   y construir un offset para mostrar la nube local en coordenadas reales. */
+  
 </script>
 </body>
 </html>
