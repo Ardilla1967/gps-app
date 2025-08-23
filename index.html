@@ -7,7 +7,7 @@
 
   <!-- PWA basics -->
   <base href="./">
-  <link rel="manifest" href="manifest.json?v=14">
+  <link rel="manifest" href="manifest.json?v=15">
   <meta name="theme-color" content="#3282F6">
   <link rel="icon" href="icon-256.png" sizes="256x256">
   <link rel="apple-touch-icon" href="icon-180.png">
@@ -200,6 +200,24 @@
   </span>
   <span id="guardar-txt"></span>
 </button>
+    
+<!-- Botón modo sin GPS -->
+<button id="btn-local" class="guardar" onclick="toggleLocalMode()">
+  🧭 Modo sin GPS
+</button>
+
+<!-- Panel de rastreo local -->
+<div id="local-panel" style="display:none; width:100%; text-align:center;">
+  <div id="local-status" style="font-weight:bold;">—</div>
+  <canvas id="local-canvas" width="280" height="180"
+          style="background:#fff;border-radius:12px;margin-top:8px;"></canvas>
+  <div id="local-dist" style="margin-top:6px;">Distancia al origen: 0 m</div>
+  <div id="local-rumbo">Rumbo al origen: —</div>
+  <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;">
+    <button onclick="localMark()" class="exportar">Marcar punto</button>
+    <button onclick="localReset()" class="borrar">Reiniciar</button>
+  </div>
+</div>
 
     <!-- Ver en mapa -->
 <button class="mapa" onclick="abrirModal()">
@@ -894,7 +912,7 @@
 
   // Service Worker (única vez, con versión y auto-update)
   if ('serviceWorker' in navigator) {
-    const swVersion = '14';
+    const swVersion = '15';
     navigator.serviceWorker.register('./sw.js?v=' + swVersion, { scope: './' })
       .then(reg => {
         function refreshNow() {
