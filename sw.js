@@ -3,7 +3,6 @@ const VERSION = 18;
 const CACHE_NAME = `puntoya-v${VERSION}`;
 
 const ASSETS = [
-  './',
   './index.html',
   './manifest.json',
   './Flecha.png',
@@ -36,20 +35,20 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
-// Permitir SKIP_WAITING desde index.js (tu registro ya lo envía)
+// Permitir SKIP_WAITING desde la página
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 // FETCH:
-// - HTML / navegación: network-first (con fallback a cache)
-// - Estáticos: cache-first (y guarda en cache lo nuevo)
+// - HTML/navegación: network-first con fallback a index.html (ignorando querystring)
+// - Estáticos: cache-first con “relleno” a medida que se descargan
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return; // no cachear externos (p.ej. Google Maps)
+  if (url.origin !== self.location.origin) return; // no cachear externos (Google Maps, etc.)
 
   const isDoc =
     req.mode === 'navigate' ||
@@ -64,7 +63,7 @@ self.addEventListener('fetch', (e) => {
           caches.open(CACHE_NAME).then((c) => c.put('./index.html', copy));
           return res;
         })
-        .catch(() => caches.match('./index.html'))
+        .catch(() => caches.match('./index.html', { ignoreSearch: true }))
     );
     return;
   }
