@@ -7,7 +7,8 @@
 
   <!-- PWA basics -->
   <base href="./">
-  <link rel="manifest" href="manifest.json?v=15">
+  <!-- OJO: sube el número cuando publiques -->
+  <link rel="manifest" href="manifest.json?v=17">
   <meta name="theme-color" content="#3282F6">
   <link rel="icon" href="icon-256.png" sizes="256x256">
   <link rel="apple-touch-icon" href="icon-180.png">
@@ -59,7 +60,17 @@
       display: flex; align-items: center; justify-content: center; gap: 7px;
     }
     .guardar { background-color: var(--blue-light); color: var(--primary); }
+    .mapa { background-color: #d8d513; border: none; color: white; font-weight: bold; }
+    .navegar { background-color: #f1db13; color: #111; font-weight: bold; }
+    .borrar { background-color: var(--danger); color: var(--white); }
 
+    .guardado, .guardadas {
+      background-color: var(--white); width: 100%; text-align: center; padding: 12px; border-radius: var(--radius);
+      font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .guardadas { color: var(--danger); }
+
+    /* Brújula */
     .brujula-container {
       width: 150px; height: 150px; background: rgba(255, 255, 255, 0.2);
       backdrop-filter: blur(6px); border: 2px solid rgba(255, 255, 255, 0.4);
@@ -74,15 +85,7 @@
     .oeste { top: 50%; left: 8px; transform: translateY(-50%); }
     #flecha { position: absolute; bottom: 50%; height: 70px; transform-origin: 50% 100%; transform: rotate(0deg); transition: transform .18s ease; }
 
-    .mapa { background-color: #d8d513; border: none; color: white; font-weight: bold; }
-    .navegar { background-color: #f1db13; color: #111; font-weight: bold; }
-    .borrar { background-color: var(--danger); color: var(--white); }
-    .guardado, .guardadas {
-      background-color: var(--white); width: 100%; text-align: center; padding: 12px; border-radius: var(--radius);
-      font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 6px;
-    }
-    .guardadas { color: var(--danger); }
-
+    /* Modales */
     #modal, #modal-nav, #modal-borrar, #modal-borrar-seleccion, #modal-sin-nombre, #modal-permiso {
       display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 10;
     }
@@ -115,20 +118,18 @@
     .sug-item:hover{ background:#f6f6f6; }
     .sug-empty{ color:#666; font-size:.9em; padding:6px 10px; }
 
-    /* Iconos SVG modernos */
-/* === Iconos circulares modernos === */
-.icon {
-  display:inline-block;
-  width: 1.6em;
-  height: 1.6em;
-  vertical-align: middle;
-  flex: 0 0 auto;
-}
-.icon svg { width:100%; height:100%; }
-.icon .bg { fill: var(--ico, #3A86FF); }   /* color del círculo (personalizable por botón) */
-.icon .fg { fill: #fff; stroke: none; }    /* pictograma en blanco */
-.icon .st { stroke:#fff; stroke-width:2.8; stroke-linecap:round; stroke-linejoin:round; fill:none; }
-
+    /* === Iconos circulares modernos === */
+    .icon {
+      display:inline-block;
+      width: 1.6em;
+      height: 1.6em;
+      vertical-align: middle;
+      flex: 0 0 auto;
+    }
+    .icon svg { width:100%; height:100%; }
+    .icon .bg { fill: var(--ico, #3A86FF); }   /* color del círculo (por botón) */
+    .icon .fg { fill: #fff; stroke: none; }    /* pictograma blanco */
+    .icon .st { stroke:#fff; stroke-width:2.8; stroke-linecap:round; stroke-linejoin:round; fill:none; }
   </style>
 </head>
 <body>
@@ -139,18 +140,16 @@
     <span class="norte">N</span><span class="este">E</span><span class="sur">S</span><span class="oeste">O</span>
     <img id="flecha" src="Flecha.png" alt="Flecha" />
   </div>
-<button id="btn-activar-nav" onclick="aceptarPermisoOrientacion()"
-        style="display:none; background:#f1db13; color:#111; border:none; font-weight:bold; border-radius:12px; padding:10px;">
-  <span class="icon" style="--ico:#00BCD4" aria-hidden="true">
-    <svg viewBox="0 0 48 48">
-      <circle class="bg" cx="24" cy="24" r="22"/>
-      <!-- brújula -->
-      <circle class="fg" cx="24" cy="24" r="3"/>
-      <path class="fg" d="M24 14l6 10-6-2-6 2 6-10z"/>
-    </svg>
-  </span>
-  <span id="btn-activar-nav-txt"></span>
-</button>
+  <button id="btn-activar-nav" onclick="aceptarPermisoOrientacion()" style="display:none; background:#f1db13; color:#111; border:none; font-weight:bold; border-radius:12px; padding:10px;">
+    <span class="icon" style="--ico:#00BCD4" aria-hidden="true">
+      <svg viewBox="0 0 48 48">
+        <circle class="bg" cx="24" cy="24" r="22"/>
+        <circle class="fg" cx="24" cy="24" r="3"/>
+        <path class="fg" d="M24 14l6 10-6-2-6 2 6-10z"/>
+      </svg>
+    </span>
+    <span id="btn-activar-nav-txt"></span>
+  </button>
 </div>
 
 <!-- Indicador de Dirección -->
@@ -158,16 +157,15 @@
   <div id="nombre-objetivo" style="color: white; font-size: 1.1em; margin-top: 8px;">Ubicación: —</div>
   <div id="distancia-info" style="color: rgb(234, 236, 240); font-size: 1.1em; margin-top: 8px;">Distancia: 0 m</div>
   <div id="direccion-info" style="color: white; font-size: 1em; margin-top: 4px;">Dirección: —</div>
-  <button id="btn-detener" onclick="detenerNavegacion()"
-        style="display:none; background:#f3f3f3; color:#444; border:none; border-radius:12px; padding:10px; margin-top:10px; font-weight:bold;">
-  <span class="icon" style="--ico:#90A4AE" aria-hidden="true">
-    <svg viewBox="0 0 48 48">
-      <circle class="bg" cx="24" cy="24" r="22"/>
-      <rect class="fg" x="16" y="16" width="16" height="16" rx="3" ry="3"/>
-    </svg>
-  </span>
-  <span id="btn-detener-txt"></span>
-</button>
+  <button id="btn-detener" onclick="detenerNavegacion()" style="display:none; background:#f3f3f3; color:#444; border:none; border-radius:12px; padding:10px; margin-top:10px; font-weight:bold;">
+    <span class="icon" style="--ico:#90A4AE" aria-hidden="true">
+      <svg viewBox="0 0 48 48">
+        <circle class="bg" cx="24" cy="24" r="22"/>
+        <rect class="fg" x="16" y="16" width="16" height="16" rx="3" ry="3"/>
+      </svg>
+    </span>
+    <span id="btn-detener-txt"></span>
+  </button>
 </div>
 
 <!-- Idioma -->
@@ -185,80 +183,56 @@
 
 <div class="container">
   <input type="text" id="nombre" placeholder="Nombrar la Actual Ubicación (opcional)" />
-
   <div class="grid-buttons">
-    <!-- Guardar -->
-<button id="btn-guardar" class="guardar" onclick="preGuardarUbicacion()">
-  <span class="icon" style="--ico:#3A86FF" aria-hidden="true">
-    <svg viewBox="0 0 48 48">
-      <circle class="bg" cx="24" cy="24" r="22"/>
-      <!-- pin -->
-      <path class="fg" d="M24 11a11 11 0 0 0-11 11c0 7.5 11 17 11 17s11-9.5 11-17a11 11 0 0 0-11-11zm0 16a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/>
-      <!-- + -->
-      <path class="st" d="M24 15v6M21 18h6"/>
-    </svg>
-  </span>
-  <span id="guardar-txt"></span>
-</button>
-    
-<!-- Botón modo sin GPS -->
-<button id="btn-local" class="guardar" onclick="toggleLocalMode()">
-  🧭 Modo sin GPS
-</button>
+    <!-- Guardar ubicación -->
+    <button id="btn-guardar" class="guardar" onclick="preGuardarUbicacion()">
+      <span class="icon" style="--ico:#3A86FF" aria-hidden="true">
+        <svg viewBox="0 0 48 48">
+          <circle class="bg" cx="24" cy="24" r="22"/>
+          <path class="fg" d="M24 11a11 11 0 0 0-11 11c0 7.5 11 17 11 17s11-9.5 11-17a11 11 0 0 0-11-11zm0 16a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/>
+          <path class="st" d="M24 15v6M21 18h6"/>
+        </svg>
+      </span>
+      <span id="guardar-txt"></span>
+    </button>
 
-<!-- Panel de rastreo local -->
-<div id="local-panel" style="display:none; width:100%; text-align:center;">
-  <div id="local-status" style="font-weight:bold;">—</div>
-  <canvas id="local-canvas" width="280" height="180"
-          style="background:#fff;border-radius:12px;margin-top:8px;"></canvas>
-  <div id="local-dist" style="margin-top:6px;">Distancia al origen: 0 m</div>
-  <div id="local-rumbo">Rumbo al origen: —</div>
-  <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;">
-    <button onclick="localMark()" class="exportar">Marcar punto</button>
-    <button onclick="localReset()" class="borrar">Reiniciar</button>
-  </div>
-</div>
-
-    <!-- Ver en mapa -->
-<button class="mapa" onclick="abrirModal()">
-  <span class="icon" style="--ico:#7BCB4B" aria-hidden="true">
-    <svg viewBox="0 0 48 48">
-      <circle class="bg" cx="24" cy="24" r="22"/>
-      <!-- mapa plegado -->
-      <path class="fg" d="M15 13l9 4 9-4v20l-9 4-9-4-9 4V17l9-4z"/>
-      <path class="fg" d="M15 13v20M24 17v20" style="opacity:.9"/>
-    </svg>
-  </span>
-  <span id="ver-txt"></span>
-</button>
+    <!-- Ver en mapa (abre modal de “Ver”) -->
+    <button class="mapa" onclick="abrirModal()">
+      <span class="icon" style="--ico:#7BCB4B" aria-hidden="true">
+        <svg viewBox="0 0 48 48">
+          <circle class="bg" cx="24" cy="24" r="22"/>
+          <path class="fg" d="M15 13l9 4 9-4v20l-9 4-9-4-9 4V17l9-4z"/>
+          <path class="fg" d="M15 13v20M24 17v20" style="opacity:.9"/>
+        </svg>
+      </span>
+      <span id="ver-txt"></span>
+    </button>
   </div>
 
   <div class="grid-buttons">
-    <!-- Navegar -->
- <button class="navegar" onclick="abrirModalNavegacion()">
-  <span class="icon" style="--ico:#5C6BC0" aria-hidden="true">
-    <svg viewBox="0 0 48 48">
-      <circle class="bg" cx="24" cy="24" r="22"/>
-      <!-- flecha de navegación -->
-      <path class="fg" d="M36 12L26.5 36c-.3.8-1.4 1-2 .3l-4.6-4.6c-.3-.3-.4-.7-.3-1.1L36 12z"/>
-      <circle class="fg" cx="24" cy="24" r="2" style="opacity:.2"/>
-    </svg>
-  </span>
-  <span id="navegar-txt"></span>
-</button>
+    <!-- Navegar (abre modal de navegación) -->
+    <button class="navegar" onclick="abrirModalNavegacion()">
+      <span class="icon" style="--ico:#5C6BC0" aria-hidden="true">
+        <svg viewBox="0 0 48 48">
+          <circle class="bg" cx="24" cy="24" r="22"/>
+          <path class="fg" d="M36 12L26.5 36c-.3.8-1.4 1-2 .3l-4.6-4.6c-.3-.3-.4-.7-.3-1.1L36 12z"/>
+          <circle class="fg" cx="24" cy="24" r="2" style="opacity:.2"/>
+        </svg>
+      </span>
+      <span id="navegar-txt"></span>
+    </button>
 
-    <!-- Borrar -->
-  <button class="borrar" onclick="abrirModalBorrar()">
-  <span class="icon" style="--ico:#FF7043" aria-hidden="true">
-    <svg viewBox="0 0 48 48">
-      <circle class="bg" cx="24" cy="24" r="22"/>
-      <!-- papelera -->
-      <path class="st" d="M15 18h18M19 18l1.2-3h7.6l1.2 3M18 18v15a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V18"/>
-      <path class="st" d="M22 23v8M26 23v8"/>
-    </svg>
-  </span>
-  <span id="borrar-txt"></span>
-</button>
+    <!-- Borrar ubicaciones -->
+    <button class="borrar" onclick="abrirModalBorrar()">
+      <span class="icon" style="--ico:#FF7043" aria-hidden="true">
+        <svg viewBox="0 0 48 48">
+          <circle class="bg" cx="24" cy="24" r="22"/>
+          <path class="st" d="M15 18h18M19 18l1.2-3h7.6l1.2 3M18 18v15a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V18"/>
+          <path class="st" d="M22 23v8M26 23v8"/>
+        </svg>
+      </span>
+      <span id="borrar-txt"></span>
+    </button>
   </div>
 
   <div class="guardado" id="mensaje-status">Esperando acción...</div>
@@ -275,17 +249,17 @@
     <input id="buscador-ubicaciones" type="text" placeholder="" oninput="filtrarModal()" onkeydown="buscarKeydown(event)" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin:8px 0;">
     <div id="sugerencias-ubicaciones" class="sugerencias"></div>
     <select id="selector-ubicaciones"></select>
-    <button onclick="verSeleccionadaEnMapa()" id="btn-ver">
-  <span class="icon" style="--ico:#7BCB4B" aria-hidden="true">
-    <svg viewBox="0 0 48 48">
-      <circle class="bg" cx="24" cy="24" r="22"/>
-      <path class="fg" d="M15 13l9 4 9-4v20l-9 4-9-4-9 4V17l9-4z"/>
-      <path class="fg" d="M15 13v20M24 17v20" style="opacity:.9"/>
-    </svg>
-  </span>
-  <span id="btn-ver-txt"></span>
-</button>
-    <button onclick="cerrarModal()" id="btn-cancelar">Cancelar</button>
+    <button type="button" onclick="verSeleccionadaEnMapa()" id="btn-ver">
+      <span class="icon" style="--ico:#7BCB4B" aria-hidden="true">
+        <svg viewBox="0 0 48 48">
+          <circle class="bg" cx="24" cy="24" r="22"/>
+          <path class="fg" d="M15 13l9 4 9-4v20l-9 4-9-4-9 4V17l9-4z"/>
+          <path class="fg" d="M15 13v20M24 17v20" style="opacity:.9"/>
+        </svg>
+      </span>
+      <span id="btn-ver-txt"></span>
+    </button>
+    <button type="button" onclick="cerrarModal()" id="btn-cancelar">Cancelar</button>
   </div>
 </div>
 
@@ -296,8 +270,8 @@
     <input id="buscador-ubicaciones-nav" type="text" placeholder="" oninput="filtrarModalNav()" onkeydown="buscarKeydownNav(event)" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin:8px 0;">
     <div id="sugerencias-ubicaciones-nav" class="sugerencias"></div>
     <select id="selector-ubicaciones-nav"></select>
-    <button onclick="iniciarNavegacionDesdeModalNav()" id="btn-iniciar-nav">Iniciar navegación</button>
-    <button onclick="cerrarModalNav()" id="btn-cancelar-nav">Cancelar</button>
+    <button type="button" onclick="iniciarNavegacionDesdeModalNav()" id="btn-iniciar-nav">Iniciar navegación</button>
+    <button type="button" onclick="cerrarModalNav()" id="btn-cancelar-nav">Cancelar</button>
   </div>
 </div>
 
@@ -306,9 +280,9 @@
   <div class="modal-content">
     <h3 id="modal-borrar-title">¿Qué deseas borrar?</h3>
     <div class="grouped-buttons">
-      <button onclick="abrirModalBorrarSeleccion()" id="btn-borrar-seleccionar" class="secondary">Seleccionar</button>
-      <button onclick="confirmarBorrarTodas()" id="btn-borrar-todas" class="confirm">Todas</button>
-      <button onclick="cerrarModalBorrar()" id="btn-borrar-cancelar" class="cancel">Cancelar</button>
+      <button type="button" onclick="abrirModalBorrarSeleccion()" id="btn-borrar-seleccionar" class="secondary">Seleccionar</button>
+      <button type="button" onclick="confirmarBorrarTodas()" id="btn-borrar-todas" class="confirm">Todas</button>
+      <button type="button" onclick="cerrarModalBorrar()" id="btn-borrar-cancelar" class="cancel">Cancelar</button>
     </div>
   </div>
 </div>
@@ -318,8 +292,8 @@
   <div class="modal-content">
     <h3 id="modal-borrar-seleccion-title">Selecciona localizaciones a borrar</h3>
     <select id="selector-borrar-ubicacion" multiple></select>
-    <button onclick="borrarMultiplesSeleccionadas()" id="btn-borrar-una" class="confirm">Borrar</button>
-    <button onclick="cerrarModalBorrarSeleccion()" id="btn-borrar-cancelar2" class="cancel">Cancelar</button>
+    <button type="button" onclick="borrarMultiplesSeleccionadas()" id="btn-borrar-una" class="confirm">Borrar</button>
+    <button type="button" onclick="cerrarModalBorrarSeleccion()" id="btn-borrar-cancelar2" class="cancel">Cancelar</button>
   </div>
 </div>
 
@@ -328,8 +302,8 @@
   <div class="modal-content">
     <span id="mensaje-sin-nombre">La ubicación actual se guardará sin nombre. ¿Deseas continuar?</span>
     <div style="display:flex;justify-content:center;gap:12px;">
-      <button class="accept" onclick="guardarUbicacion(true)" id="btn-aceptar-sin-nombre">Aceptar</button>
-      <button class="cancel" onclick="cerrarModalSinNombre()" id="btn-cancelar-sin-nombre">Cancelar</button>
+      <button type="button" class="accept" onclick="guardarUbicacion(true)" id="btn-aceptar-sin-nombre">Aceptar</button>
+      <button type="button" class="cancel" onclick="cerrarModalSinNombre()" id="btn-cancelar-sin-nombre">Cancelar</button>
     </div>
   </div>
 </div>
@@ -339,8 +313,8 @@
   <div class="modal-content">
     <span id="permiso-msg">Para continuar, acepta permisos para navegación.</span>
     <div style="display:flex;justify-content:center;gap:12px;margin-top:10px;">
-      <button class="accept" onclick="aceptarPermisoOrientacion()" id="btn-permiso-aceptar">Aceptar</button>
-      <button class="cancel" onclick="cerrarModalPermiso()" id="btn-permiso-cancelar">Cancelar</button>
+      <button type="button" class="accept" onclick="aceptarPermisoOrientacion()" id="btn-permiso-aceptar">Aceptar</button>
+      <button type="button" class="cancel" onclick="cerrarModalPermiso()" id="btn-permiso-cancelar">Cancelar</button>
     </div>
   </div>
 </div>
@@ -444,7 +418,6 @@
     document.getElementById("mensaje-sin-nombre").innerText = textos[lang].sin_nombre;
     document.getElementById("btn-aceptar-sin-nombre").innerText = textos[lang].aceptar;
     document.getElementById("btn-cancelar-sin-nombre").innerText = textos[lang].btn_cancelar;
-
     const pmsg = document.getElementById('permiso-msg'); if (pmsg) pmsg.innerText = textos[lang].permiso_msg;
     const busc1 = document.getElementById('buscador-ubicaciones'); if (busc1) busc1.placeholder = textos[lang].buscar;
     const busc2 = document.getElementById('buscador-ubicaciones-nav'); if (busc2) busc2.placeholder = textos[lang].buscar;
@@ -597,7 +570,6 @@
       empty.innerText = (lang==='es' ? 'Sin resultados' : 'No results');
       cont.appendChild(empty);
     }
-    cont.classList.add('sugerencias');
     cont.style.display = (filterText && filterText.trim() !== '') ? 'block' : 'none';
   }
   function seleccionarEnModal(idx){
@@ -617,6 +589,7 @@
       }
     }
   }
+
   function abrirModal() {
     const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
     __modalUbicaciones = ubicaciones;
@@ -699,6 +672,7 @@
       }
     }
   }
+
   function abrirModalNavegacion() {
     const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
     __modalUbicacionesNav = ubicaciones;
@@ -710,18 +684,6 @@
   }
   function cerrarModalNav() { document.getElementById("modal-nav").style.display = "none"; }
 
-  // Navegación
-  let objetivo = null;
-  let watcherId = null;
-  let llegadaMostrada = false;
-
-  // Estados de orientación y fusión
-  let headingFiltered = 0;     // suavizada
-  let headingReady = false;
-  let fusedHeading = 0;        // fusión compás + GPS si hay movimiento
-  let __arrowAngle = 0;        // ángulo mostrado (suavizado)
-  let __py_orientacion_activa = false;
-
   function iniciarNavegacionDesdeModalNav() {
     const idx = document.getElementById("selector-ubicaciones-nav").value;
     const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
@@ -731,6 +693,18 @@
     }
     iniciarNavegacionConIndice(parseInt(idx,10));
   }
+
+  // Navegación (compartida)
+  let objetivo = null;
+  let watcherId = null;
+  let llegadaMostrada = false;
+
+  // Heading y suavizado
+  let headingFiltered = 0;     // suavizada
+  let headingReady = false;
+  let fusedHeading = 0;        // fusión compás + GPS si hay movimiento
+  let __arrowAngle = 0;        // ángulo mostrado (suavizado)
+  let __py_orientacion_activa = false;
 
   function iniciarNavegacionConIndice(idx) {
     llegadaMostrada = false;
@@ -742,13 +716,13 @@
     objetivo = ubicaciones[idx];
 
     document.getElementById("modal-nav").style.display = "none";
+
     document.getElementById("nav-compass-row").style.display = "flex";
     document.getElementById("brujula").style.display = "flex";
     document.getElementById("indicador-direccion").style.display = "flex";
     const btnStop = document.getElementById("btn-detener"); if (btnStop) btnStop.style.display = "block";
     document.getElementById("nombre-objetivo").innerText = `Ubicación: ${objetivo.nombre || "(sin nombre)"}`;
 
-    // Llevar al usuario a la pantalla principal
     const cont = document.querySelector('.container'); if (cont) cont.scrollIntoView({behavior:'smooth', block:'start'});
     const msg = document.getElementById('mensaje-status'); if (msg) msg.innerText = (lang==='es' ? `🧭 Navegando hacia: ${objetivo.nombre}` : `🧭 Navigating to: ${objetivo.nombre}`);
 
@@ -830,12 +804,12 @@
     return direcciones[index];
   }
 
-  // Helpers ángulos
+  // --- Helpers de ángulos y suavizado ---
   function norm(a){ a = a % 360; return a < 0 ? a + 360 : a; }
   function delta(a, b){ let d = (b - a + 540) % 360 - 180; return d; }
   function smoothAngle(prev, target, factor){ return norm(prev + delta(prev, target) * factor); }
 
-  // Heading absoluto desde alpha/beta/gamma
+  // Derivar heading absoluto (0°=N) desde alpha/beta/gamma
   function computeAbsoluteHeading(alpha, beta, gamma){
     const d2r = Math.PI/180;
     const _x = (beta  || 0) * d2r;
@@ -896,11 +870,86 @@
       activarOrientacion();
     }
   }
-  function aceptarPermisoOrientacion(){ solicitarPermisoOrientacion(); }
+  function abrirModalPermisoOrientacion(){ const el = document.getElementById('modal-permiso'); if (el) el.style.display='flex'; }
   function cerrarModalPermiso(){ const el = document.getElementById('modal-permiso'); if (el) el.style.display='none'; }
+  function aceptarPermisoOrientacion(){
+    if (typeof DeviceOrientationEvent?.requestPermission === 'function'){
+      DeviceOrientationEvent.requestPermission().then(state=>{
+        if (state==='granted'){
+          cerrarModalPermiso();
+          activarOrientacion();
+          const bnav = document.getElementById("btn-activar-nav"); if (bnav) bnav.style.display = "none";
+        } else {
+          alert(lang==='es' ? 'Permiso no otorgado.' : 'Permission not granted.');
+        }
+      }).catch(err=>{ console.error(err); alert(lang==='es' ? 'Error al solicitar permiso.' : 'Error requesting permission.'); });
+    } else {
+      activarOrientacion();
+      cerrarModalPermiso();
+    }
+  }
 
-  // --- Abrir / Cerrar Modales (definición única) ---
-  // (Las funciones abrirModal / abrirModalNavegacion ya están definidas arriba; no duplicarlas)
+  // --- Abrir mapas compatible con PWA iOS/Android ---
+  function esStandalone() {
+    return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  }
+  function esIOS() { return /iPad|iPhone|iPod/i.test(navigator.userAgent); }
+  function esAndroid() { return /Android/i.test(navigator.userAgent); }
+
+  function abrirMapaExterno(lat, lon, label) {
+    const nombre = label ? String(label) : 'PuntoYa';
+    const gmaps = `https://maps.google.com/?q=${encodeURIComponent(nombre)}@${lat},${lon}&ll=${lat},${lon}&z=16`;
+    const apple = `maps://?q=${lat},${lon}`;
+    const geo   = `geo:${lat},${lon}?q=${lat},${lon}(${encodeURIComponent(nombre)})`;
+    try {
+      if (esIOS()) {
+        if (esStandalone()) { location.href = apple; }
+        else { window.open(gmaps, '_blank', 'noopener'); }
+      } else if (esAndroid()) {
+        if (esStandalone()) { location.href = geo; }
+        else { window.open(gmaps, '_blank', 'noopener'); }
+      } else {
+        window.open(gmaps, '_blank', 'noopener');
+      }
+    } catch (e) {
+      location.href = gmaps;
+    }
+  }
+
+  // === Ver en mapa (compat) ===
+  function verSeleccionadaEnMapa() {
+    const sel = document.getElementById("selector-ubicaciones");
+    const idx = sel && sel.value !== "" ? parseInt(sel.value, 10) : NaN;
+    const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+
+    if (!Number.isInteger(idx) || !ubicaciones[idx]) {
+      alert((lang === 'es') ? "Por favor selecciona una ubicación válida." : "Please select a valid location.");
+      return;
+    }
+
+    const { lat, lon, nombre } = ubicaciones[idx];
+    const latN = parseFloat(lat), lonN = parseFloat(lon);
+    if (!isFinite(latN) || !isFinite(lonN)) {
+      alert((lang === 'es') ? "Coordenadas no válidas." : "Invalid coordinates.");
+      return;
+    }
+
+    cerrarModal();
+    abrirMapaExterno(latN, lonN, nombre);
+  }
+
+  // Abrir/Cerrar modales navegacion wrapper
+  function abrirModalNavegacion() {
+    const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+    __modalUbicacionesNav = ubicaciones;
+    const busc = document.getElementById("buscador-ubicaciones-nav");
+    if (busc) busc.value = "";
+    buildOpcionesModalNav("");
+    renderSugerenciasNav("");
+    document.getElementById("modal-nav").style.display = "flex";
+  }
+  function cerrarModal() { document.getElementById("modal").style.display = "none"; }
+  function cerrarModalNav() { document.getElementById("modal-nav").style.display = "none"; }
 
   // Inicio
   document.addEventListener('DOMContentLoaded', () => {
@@ -910,14 +959,14 @@
     });
   });
 
-  // Service Worker (única vez, con versión y auto-update)
+  // Service Worker (único registro, con scope correcto)
   if ('serviceWorker' in navigator) {
-    const swVersion = '15';
-    navigator.serviceWorker.register('./sw.js?v=' + swVersion, { scope: './' })
+    const SW_VERSION = '17'; // súbelo cuando publiques
+    const SCOPE = location.pathname.replace(/[^/]+$/, ''); // '/gps-app/' en GitHub Pages
+    navigator.serviceWorker
+      .register(SCOPE + 'sw.js?v=' + SW_VERSION, { scope: SCOPE })
       .then(reg => {
-        function refreshNow() {
-          if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-        }
+        const refreshNow = () => reg.waiting?.postMessage({ type: 'SKIP_WAITING' });
         if (reg.waiting) refreshNow();
         reg.addEventListener('updatefound', () => {
           const sw = reg.installing;
@@ -925,219 +974,10 @@
             if (sw.state === 'installed' && navigator.serviceWorker.controller) refreshNow();
           });
         });
-        navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
+        navigator.serviceWorker.addEventListener('controllerchange', () => location.reload());
       })
       .catch(console.error);
   }
-
-
-/* ========= RASTREO LOCAL SIN GPS (Dead-reckoning por pasos) ========= */
-
-// Estado
-let LOCAL_ACTIVE = false;
-let L_pose = { x:0, y:0 };        // metros (y=Norte, x=Este)
-let L_origin = { x:0, y:0 };
-let L_heading = 0;                // 0=N, horario (grados) — reusa tu brújula
-let L_path = [];                  // breadcrumbs: {x,y,t}
-let L_stepLen = 0.75;             // metros por paso (ajustable en UI si quieres)
-let L_lastStepAt = 0;
-let L_canvas, L_ctx, L_status, L_dist, L_rumbo, L_panel;
-
-// Permisos iOS para motion (además de tu permiso de orientación)
-async function ensureMotionPermission() {
-  try {
-    if (typeof DeviceMotionEvent?.requestPermission === 'function') {
-      const s = await DeviceMotionEvent.requestPermission();
-      return s === 'granted';
-    }
-    return true; // Android/desktop
-  } catch { return false; }
-}
-
-// Conectar/desconectar sensores de pasos
-function attachStepSensor(){
-  window.addEventListener('devicemotion', onMotion, { passive:true });
-}
-function detachStepSensor(){
-  window.removeEventListener('devicemotion', onMotion, { passive:true });
-}
-
-// Detector de pasos (simple): picos de aceleración vertical
-let lp = 0; // low-pass de magnitud
-function onMotion(e){
-  const a = e.accelerationIncludingGravity || e.acceleration;
-  if (!a) return;
-  const mag = Math.sqrt((a.x||0)**2+(a.y||0)**2+(a.z||0)**2);
-  lp = 0.9*lp + 0.1*mag;
-  const high = mag - lp;                 // high-pass rudimentario
-  const now = performance.now();
-  if (high > 1.0 && (now - L_lastStepAt) > 280) { // umbral + periodo refractario
-    L_lastStepAt = now;
-    onStep();
-  }
-}
-
-// Un paso → avanzar L_stepLen hacia el heading actual
-function onStep(){
-  const rad = (L_heading * Math.PI) / 180;
-  L_pose.x += L_stepLen * Math.sin(rad);
-  L_pose.y += L_stepLen * Math.cos(rad);
-  L_path.push({ x:L_pose.x, y:L_pose.y, t:Date.now() });
-  localRender();
-  // Si tu brújula está visible, reutiliza tu flecha: rumbo a origen
-  window.rumboObjetivo = bearingToOrigin(); // reutiliza tu UI de brújula
-}
-
-// Rumbo (0=N) desde posición actual al origen local
-function bearingToOrigin(){
-  const dx = L_origin.x - L_pose.x;
-  const dy = L_origin.y - L_pose.y;
-  let ang = Math.atan2(dx, dy) * 180/Math.PI;
-  if (ang < 0) ang += 360;
-  return ang;
-}
-
-// Texto cardinal (reusa tu función si prefieres)
-function cardinal(ang){
-  const d = ["N","NNE","NE","ENE","E","ESE","SE","SSE",
-             "S","SSO","SO","OSO","O","ONO","NO","NNO"];
-  return d[Math.round(ang/22.5)%16];
-}
-
-// Render mini-mapa
-function localRender(){
-  if (!L_ctx) return;
-  const w=L_canvas.width, h=L_canvas.height;
-  L_ctx.clearRect(0,0,w,h);
-  // Ejes & origen
-  L_ctx.fillStyle = "#eef2ff";
-  L_ctx.fillRect(0,0,w,h);
-
-  // Auto-escala para que todo el path quepa (20px margen)
-  const pad = 20;
-  let minx=0, maxx=0, miny=0, maxy=0;
-  const pts = [{x:0,y:0}, ...L_path, {x:L_pose.x,y:L_pose.y}];
-  pts.forEach(p=>{ minx=Math.min(minx,p.x); maxx=Math.max(maxx,p.x);
-                   miny=Math.min(miny,p.y); maxy=Math.max(maxy,p.y); });
-  const span = Math.max(maxx-minx, maxy-miny, 10);
-  const scale = (Math.min(w,h)-2*pad) / span;
-  const cx = w/2, cy = h/2;
-  function toScreen(p){
-    // Y hacia arriba en pantalla: invertimos
-    return { x: cx + (p.x - (minx+maxx)/2)*scale,
-             y: cy - (p.y - (miny+maxy)/2)*scale };
-  }
-
-  // Path
-  L_ctx.strokeStyle = "#3A86FF";
-  L_ctx.lineWidth = 2;
-  L_ctx.beginPath();
-  let p0 = toScreen({x:0,y:0});
-  L_ctx.moveTo(p0.x, p0.y);
-  for (const p of L_path){
-    const s = toScreen(p);
-    L_ctx.lineTo(s.x, s.y);
-  }
-  L_ctx.stroke();
-
-  // Origen
-  L_ctx.fillStyle = "#43a047";
-  const o = toScreen({x:0,y:0});
-  L_ctx.beginPath(); L_ctx.arc(o.x,o.y,5,0,Math.PI*2); L_ctx.fill();
-
-  // Posición actual
-  L_ctx.fillStyle = "#e53935";
-  const c = toScreen(L_pose);
-  L_ctx.beginPath(); L_ctx.arc(c.x,c.y,5,0,Math.PI*2); L_ctx.fill();
-
-  // Datos
-  const dist = Math.hypot(L_pose.x, L_pose.y);
-  const rumbo = bearingToOrigin();
-  L_dist.textContent = `Distancia al origen: ${dist<1000 ? dist.toFixed(1)+' m' : (dist/1000).toFixed(2)+' km'}`;
-  L_rumbo.textContent = `Rumbo al origen: ${cardinal(rumbo)} (${Math.round(rumbo)}°)`;
-  if (typeof window.actualizarRotacionFlecha === 'function') {
-    window.rumboObjetivo = rumbo; // tu flecha apunta a origen
-    window.actualizarRotacionFlecha();
-  }
-}
-
-// UI
-async function toggleLocalMode(){
-  if (!LOCAL_ACTIVE) {
-    // Pedir permisos de orientación/motion (iOS)
-    const okMotion = await ensureMotionPermission();
-    if (!okMotion) { alert('Se necesitan permisos de movimiento para rastreo local.'); return; }
-    if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
-      try {
-        const s = await DeviceOrientationEvent.requestPermission();
-        if (s !== 'granted') { alert('Permite la orientación del dispositivo.'); return; }
-        activarOrientacion?.(); // ya la tienes implementada
-      } catch {}
-    } else {
-      activarOrientacion?.();
-    }
-    startLocal();
-  } else {
-    stopLocal();
-  }
-}
-
-function startLocal(){
-  L_panel = document.getElementById('local-panel');
-  L_canvas = document.getElementById('local-canvas');
-  L_ctx = L_canvas.getContext('2d');
-  L_status = document.getElementById('local-status');
-  L_dist = document.getElementById('local-dist');
-  L_rumbo = document.getElementById('local-rumbo');
-
-  // Origen en (0,0); posición actual se resetea
-  L_pose = {x:0,y:0}; L_origin = {x:0,y:0}; L_path = [];
-  L_status.textContent = 'Sin señal GPS: rastreo local ACTIVO';
-  L_panel.style.display = 'block';
-  document.getElementById('btn-local').textContent = 'Detener modo sin GPS';
-
-  // “Escuchar” brújula de tu app: headingFiltered/fusedHeading si existen
-  // Actualiza L_heading en tu bucle de orientación
-  const _oldUpdate = window.actualizarRotacionFlecha;
-  window.actualizarRotacionFlecha = function(){
-    // heading “real” de tu app: fusedHeading || headingFiltered (si existen)
-    const h = (window.fusedHeading ?? window.headingFiltered ?? 0);
-    L_heading = (typeof h === 'number') ? h : 0;
-    if (_oldUpdate) _oldUpdate();
-  };
-
-  attachStepSensor();
-  LOCAL_ACTIVE = true;
-  localRender();
-
-  // Si vuelve GPS: reanclar (transformación simple a lat/lon)
-  try {
-    navigator.geolocation.getCurrentPosition(()=>{},()=>{}, { enableHighAccuracy:true, timeout:5000 });
-  } catch {}
-}
-
-function stopLocal(){
-  detachStepSensor();
-  LOCAL_ACTIVE = false;
-  document.getElementById('btn-local').textContent = '🧭 Modo sin GPS';
-  if (L_panel) { L_panel.style.display = 'none'; }
-}
-
-function localMark(){
-  L_path.push({ x:L_pose.x, y:L_pose.y, t:Date.now(), mark:true });
-  localRender();
-}
-
-function localReset(){
-  if (!confirm('Reiniciar origen y borrar trazas locales?')) return;
-  L_pose = {x:0,y:0}; L_origin = {x:0,y:0}; L_path = [];
-  localRender();
-}
-
-/* --- Reanclaje cuando vuelve GPS (opcional, básico) ---
-   Si llega una posición con buena precisión, puedes guardar lat/lon actuales
-   y construir un offset para mostrar la nube local en coordenadas reales. */
-  
 </script>
 </body>
 </html>
