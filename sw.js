@@ -1,28 +1,83 @@
+// Sube el número en cada despliegue
+const VERSION = 18;
+const CACHE_NAME = `puntoya-v${VERSION}`;
 
-const CACHE = "puntoya-v1";
-const BASE = "/gps-app/";
 const ASSETS = [
-  BASE,
-  BASE + "index.html",
-  BASE + "manifest.json",
-  BASE + "PuntoYa.html",
-  BASE + "PUNTOMAPS.png",
-  BASE + "excel-icon.png",
-  BASE + "basurero-icon.png",
-  BASE + "Mis-ubicaciones-icon.png",
-  BASE + "Flecha.png"
+  './index.html',
+  './manifest.json',
+  './Flecha.png',
+  './PUNTOMAPS.png',
+  './Mis-ubicaciones-icon.png',
+  './icon-180.png',
+  './icon-192.png',
+  './icon-256.png',
+  './icon-384.png',
+  './icon-512.png',
 ];
 
-self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));
+// INSTALL: precachea (forzando ir a red)
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then((c) =>
+      c.addAll(ASSETS.map((url) => new Request(url, { cache: 'reload' })))
+    )
+  );
+  self.skipWaiting();
 });
 
-self.addEventListener("activate", (e) => {
-  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))));
+// ACTIVATE: limpia caches viejos
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : undefined)))
+    )
+  );
+  self.clients.claim();
 });
 
-self.addEventListener("fetch", (e) => {
-  const url = new URL(e.request.url);
-  if (!url.pathname.startsWith(BASE)) return;
-  e.respondWith(caches.match(e.request).then((r) => r || fetch(e.request)));
+// Permitir SKIP_WAITING desde la página
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
+// FETCH:
+// - HTML/navegación: network-first con fallback a index.html (ignorando querystring)
+// - Estáticos: cache-first con “relleno” a medida que se descargan
+self.addEventListener('fetch', (e) => {
+  const req = e.request;
+  if (req.method !== 'GET') return;
+
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return; // no cachear externos (Google Maps, etc.)
+
+  const isDoc =
+    req.mode === 'navigate' ||
+    req.destination === 'document' ||
+    url.pathname.endsWith('/index.html');
+
+  if (isDoc) {
+    e.respondWith(
+      fetch(req)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then((c) => c.put('./index.html', copy));
+          return res;
+        })
+        .catch(() => caches.match('./index.html', { ignoreSearch: true }))
+    );
+    return;
+  }
+
+  e.respondWith(
+    caches.match(req).then((cached) => {
+      if (cached) return cached;
+      return fetch(req)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(req, copy));
+          return res;
+        })
+        .catch(() => undefined);
+    })
+  );
 });
