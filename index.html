@@ -131,15 +131,56 @@
     .icon .fg { fill: #fff; stroke: none; }    /* pictograma blanco */
     .icon .st { stroke:#fff; stroke-width:2.8; stroke-linecap:round; stroke-linejoin:round; fill:none; }
   </style>
+  .compass-wrap{
+  width: 270px; height: 300px; margin: 12px auto 0; display:flex;
+  flex-direction: column; align-items: center; justify-content:flex-start;
+}
+.compass-title{
+  color:#e5e7eb; font-size:.95em; margin-bottom:4px; opacity:.9;
+}
+.compass-reading{
+  color:#ffffff; font-weight:700; font-size:1.2em; margin-bottom:6px;
+  text-shadow: 0 0 3px rgba(0,0,0,.25);
+}
+.compass-svg{ width: 270px; height: 270px; }
+#needle-group{ transition: transform .18s ease; transform-origin: 120px 120px; }
+
 </head>
 <body>
 
 <!-- Brújula + botón activar navegación -->
 <div id="nav-compass-row" style="display:none; align-items:center; justify-content:center; gap:10px; margin-top:10px;">
-  <div id="brujula" class="brujula-container">
-    <span class="norte">N</span><span class="este">E</span><span class="sur">S</span><span class="oeste">O</span>
-    <img id="flecha" src="Flecha.png" alt="Flecha" />
-  </div>
+<div id="brujula" class="compass-wrap" style="display:none">
+  <div class="compass-title">Ubicación actual</div>
+  <div id="compass-reading" class="compass-reading">0° N</div>
+
+  <svg id="compass-svg" class="compass-svg" viewBox="0 0 240 240" aria-label="Brújula">
+    <!-- fondo y aro -->
+    <circle cx="120" cy="120" r="110" fill="#0b0d10" />
+    <circle cx="120" cy="120" r="110" fill="none" stroke="#2b2f33" stroke-width="2"/>
+
+    <!-- grupos generados por JS -->
+    <g id="ticks"></g>
+    <g id="nums"></g>
+
+    <!-- letras cardinales -->
+    <text x="120" y="42"  fill="#fff" font-size="20" text-anchor="middle" font-weight="700">N</text>
+    <text x="210" y="126" fill="#fff" font-size="20" text-anchor="middle" font-weight="700">E</text>
+    <text x="120" y="218" fill="#fff" font-size="20" text-anchor="middle" font-weight="700">S</text>
+    <text x="30"  y="126" fill="#fff" font-size="20" text-anchor="middle" font-weight="700">O</text>
+
+    <!-- marca superior (triangulito blanco) -->
+    <polygon points="120,18 114,28 126,28" fill="#ffffff"/>
+
+    <!-- aguja (grupo que rotamos con JS) -->
+    <g id="needle-group" transform="rotate(0 120 120)">
+      <polygon points="120,48 130,120 110,120" fill="#00BCD4"/>
+      <polygon points="120,192 110,120 130,120" fill="#546E7A"/>
+      <circle cx="120" cy="120" r="5" fill="#fff"/>
+    </g>
+  </svg>
+</div>
+
   <button id="btn-activar-nav" onclick="aceptarPermisoOrientacion()" style="display:none; background:#f1db13; color:#111; border:none; font-weight:bold; border-radius:12px; padding:10px;">
     <span class="icon" style="--ico:#00BCD4" aria-hidden="true">
       <svg viewBox="0 0 48 48">
@@ -390,6 +431,15 @@
       confirm_delete_some: count => `Delete ${count} selected locations? This cannot be undone.`
     }
   };
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  initCompassDial();     // ← NUEVO
+  aplicarTraduccion();
+  document.querySelectorAll('.lang-selector button').forEach(btn => {
+    btn.classList.toggle('selected', btn.dataset.lang === lang);
+  });
+});
+</script>
 
   function aplicarTraduccion() {
     document.getElementById("nombre").placeholder = textos[lang].placeholder;
@@ -978,6 +1028,79 @@
       })
       .catch(console.error);
   }
+  // Dibuja las marcas y números de la esfera
+function initCompassDial(){
+  const svg = document.getElementById('compass-svg');
+  if (!svg) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  const ticks = svg.querySelector('#ticks');
+  const nums  = svg.querySelector('#nums');
+  if (!ticks || !nums) return;
+
+  const cx=120, cy=120, rOuter=110;
+
+  for (let a=0; a<360; a+=5){
+    const rad = a * Math.PI/180;
+    const isMajor = (a % 30 === 0);
+    const len = isMajor ? 12 : 6;
+    const x1 = cx + (rOuter - len) * Math.sin(rad);
+    const y1 = cy - (rOuter - len) * Math.cos(rad);
+    const x2 = cx + rOuter * Math.sin(rad);
+    const y2 = cy - rOuter * Math.cos(rad);
+
+    const line = document.createElementNS(NS,'line');
+    line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+    line.setAttribute('stroke', isMajor ? '#e5e7eb' : '#8a9096');
+    line.setAttribute('stroke-width', isMajor ? '2' : '1');
+    ticks.appendChild(line);
+
+    if (isMajor && a !== 0){ // números cada 30°, excepto en 0 (ya está la N)
+      const rn = rOuter - 24;
+      const xn = cx + rn * Math.sin(rad);
+      const yn = cy - rn * Math.cos(rad) + 5;
+      const t = document.createElementNS(NS,'text');
+      t.setAttribute('x', xn); t.setAttribute('y', yn);
+      t.setAttribute('fill', '#b8bfc6');
+      t.setAttribute('font-size', '12');
+      t.setAttribute('text-anchor', 'middle');
+      t.textContent = a;
+      nums.appendChild(t);
+    }
+  }
+}
+
+// Cardinal abreviado para la lectura (N, NE, E, ...)
+function cardinalShort(deg){
+  const dirs = ['N','NE','E','SE','S','SW','W','NW'];
+  return dirs[Math.round((deg%360)/45)%8];
+}
+
+// Sobrescribe TU función para girar la aguja (sigue actualizando flecha si existe)
+const __oldActualizarRotacionFlecha = (typeof actualizarRotacionFlecha === 'function') ? actualizarRotacionFlecha : null;
+function actualizarRotacionFlecha(){
+  // usa el ángulo ya calculado en tu app (__arrowAngle)
+  const a = (typeof __arrowAngle === 'number') ? __arrowAngle : 0;
+
+  // nueva aguja SVG
+  const g = document.getElementById('needle-group');
+  if (g) g.style.transform = `rotate(${a}deg)`;
+
+  // compat: tu imagen antigua (si aún existe)
+  const img = document.getElementById('flecha');
+  if (img) img.style.transform = `rotate(${a}deg)`;
+
+  // lectura de heading en la parte superior (usa tu heading fusionado si existe)
+  const head = (typeof fusedHeading === 'number' && !isNaN(fusedHeading))
+               ? fusedHeading
+               : (typeof headingFiltered === 'number' ? headingFiltered : 0);
+  const deg = Math.round((head%360+360)%360);
+  const out = document.getElementById('compass-reading');
+  if (out) out.textContent = `${deg}° ${cardinalShort(deg)}`;
+
+  // si tenías lógica adicional, la conservamos
+  if (__oldActualizarRotacionFlecha) try{ __oldActualizarRotacionFlecha(); }catch(e){}
+}
 </script>
 </body>
 </html>
