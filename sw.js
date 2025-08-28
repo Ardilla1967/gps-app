@@ -81,3 +81,16 @@ self.addEventListener('fetch', (e) => {
     })
   );
 });
+self.addEventListener('activate', (e) => {
+  e.waitUntil((async () => {
+    // limpia caches viejos
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => (k !== CACHE_NAME ? caches.delete(k) : undefined)));
+
+    // habilita navigation preload si existe (mejora el primer paint)
+    if (self.registration.navigationPreload) {
+      await self.registration.navigationPreload.enable();
+    }
+    await self.clients.claim();
+  })());
+});
