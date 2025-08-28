@@ -55,18 +55,26 @@ self.addEventListener('fetch', (e) => {
     req.destination === 'document' ||
     url.pathname.endsWith('/index.html');
 
-  if (isDoc) {
-    e.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then((c) => c.put('./index.html', copy));
-          return res;
-        })
-        .catch(() => caches.match('./index.html', { ignoreSearch: true }))
-    );
-    return;
-  }
+if (isDoc) {
+  e.respondWith((async () => {
+    try {
+      const preloaded = await e.preloadResponse;
+      if (preloaded) {
+        // guarda una copia en cache
+        const copy = preloaded.clone();
+        caches.open(CACHE_NAME).then(c => c.put('./index.html', copy));
+        return preloaded;
+      }
+      const res = await fetch(req);
+      const copy = res.clone();
+      caches.open(CACHE_NAME).then(c => c.put('./index.html', copy));
+      return res;
+    } catch {
+      return caches.match('./index.html', { ignoreSearch: true });
+    }
+  })());
+  return;
+}
 
   e.respondWith(
     caches.match(req).then((cached) => {
