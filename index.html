@@ -684,19 +684,81 @@ function computeAbsoluteHeading(alpha,beta,gamma){
   const so=(screen.orientation && screen.orientation.angle) || window.orientation || 0;
   return norm(heading + (so||0));
 }
-function activarOrientacion(){
+<script>
+// ======= Parámetros del filtro de brújula =======
+const EMA_ALPHA = 0.08;       // suavizado de media circular (más chico = más suave)
+const DEAD_BAND = 1.2;        // grados mínimos para mover aguja
+const GLITCH_DEG = 65;        // umbral para considerar "salto" espurio
+const GLITCH_PERSIST_MS = 120;// debe repetirse en este tiempo para aceptarlo
+
+let headingAvgX = 1, headingAvgY = 0; // vector filtrado (cos,sin)
+let lastAcceptedHeading = 0;
+let lastOriTs = 0;
+let pendingGlitch = false;
+let glitchStartTs = 0;
+
+function circularEMA(deg){
+  const r = Math.PI/180, x = Math.cos(deg*r), y = Math.sin(deg*r);
+  headingAvgX = (1-EMA_ALPHA)*headingAvgX + EMA_ALPHA*x;
+  headingAvgY = (1-EMA_ALPHA)*headingAvgY + EMA_ALPHA*y;
+  let a = Math.atan2(headingAvgY, headingAvgX)*180/Math.PI;
+  if (a < 0) a += 360;
+  return a;
+}
+
+function acceptOrRejectGlitch(sampleDeg){
+  const now = performance.now();
+  const d = Math.abs(delta(lastAcceptedHeading, sampleDeg));
+  if (d > GLITCH_DEG) {
+    // primera vez que salta: armamos "ventana" para ver si persiste
+    if (!pendingGlitch){ pendingGlitch = true; glitchStartTs = now; return null; }
+    // si sigue saltado por más de GLITCH_PERSIST_MS, lo aceptamos
+    if (now - glitchStartTs < GLITCH_PERSIST_MS) return null;
+    pendingGlitch = false;
+  } else {
+    // volvimos a zona normal: cancelamos ventana
+    pendingGlitch = false;
+  }
+  lastAcceptedHeading = sampleDeg;
+  return sampleDeg;
+}
+
+function activarOrientacion() {
   if (__py_orientacion_activa || !window.DeviceOrientationEvent) return;
-  const evtName=('ondeviceorientationabsolute' in window)?'deviceorientationabsolute':'deviceorientation';
-  window.addEventListener(evtName, e => {
-    let h=null;
-    if (typeof e.webkitCompassHeading === 'number' && !isNaN(e.webkitCompassHeading)) h=e.webkitCompassHeading;
-    else if ((e.absolute===true || evtName==='deviceorientationabsolute') && e.alpha!=null) h=computeAbsoluteHeading(e.alpha,e.beta,e.gamma);
-    else if (e.alpha!=null){ const so=(screen.orientation&&screen.orientation.angle)||window.orientation||0; h=norm((360-e.alpha)+(so||0)); }
-    if (h!=null){ if (!headingReady){ headingFiltered=h; headingReady=true; } else { headingFiltered=smoothAngle(headingFiltered, h, 0.15); } }
+
+  const evtName = ('ondeviceorientationabsolute' in window) ? 'deviceorientationabsolute' : 'deviceorientation';
+
+  window.addEventListener(evtName, (e) => {
+    // Throttle leve, evita ráfagas de 100+ Hz
+    const now = performance.now();
+    if (now - lastOriTs < 40) return; // ~25 Hz
+    lastOriTs = now;
+
+    let h = null;
+    if (typeof e.webkitCompassHeading === 'number' && !isNaN(e.webkitCompassHeading)) {
+      // iOS: si reporta precisión pésima, descartamos
+      if (typeof e.webkitCompassAccuracy === 'number' && e.webkitCompassAccuracy > 25) return;
+      h = e.webkitCompassHeading;
+    } else if ((e.absolute === true || evtName === 'deviceorientationabsolute') && e.alpha != null) {
+      h = computeAbsoluteHeading(e.alpha, e.beta, e.gamma);
+    } else if (e.alpha != null) {
+      const so = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+      h = norm((360 - e.alpha) + (so || 0));
+    }
+
+    if (h == null) return;
+
+    // Rechazo de picos y media circular
+    const accepted = acceptOrRejectGlitch(h);
+    if (accepted == null) return;
+    headingFiltered = circularEMA(accepted);
+
     actualizarRotacionFlecha();
   }, true);
+
   __py_orientacion_activa = true;
 }
+
 function solicitarPermisoOrientacion(){
   if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
     DeviceOrientationEvent.requestPermission().then(state => {
@@ -762,15 +824,30 @@ function initCompassDial(){
   }
 }
 function cardinalShort(deg){ const d=['N','NE','E','SE','S','SW','W','NW']; return d[Math.round((deg%360)/45)%8]; }
-function actualizarRotacionFlecha(){
-  const objetivoVsYo = delta(fusedHeading || headingFiltered || 0, (typeof window.rumboObjetivo === 'number' ? window.rumboObjetivo : 0));
+function actualizarRotacionFlecha() {
+  const objetivoVsYo = delta(fusedHeading || headingFiltered || 0,
+                             (typeof window.rumboObjetivo === 'number' ? window.rumboObjetivo : 0));
   const targetAngle = norm(objetivoVsYo);
-  if (__arrowAngle === undefined || __arrowAngle === null) __arrowAngle = targetAngle;
-  __arrowAngle = smoothAngle(__arrowAngle, targetAngle, 0.25);
-  const g = document.getElementById('needle-group'); if (g) g.style.transform = `rotate(${__arrowAngle}deg)`;
-  const head = (typeof fusedHeading === 'number' && !isNaN(fusedHeading)) ? fusedHeading : (typeof headingFiltered === 'number' ? headingFiltered : 0);
-  const deg = Math.round((head%360+360)%360);
-  const out = document.getElementById('compass-reading'); if (out) out.textContent = `${deg}° ${cardinalShort(deg)}`;
+
+  if (__arrowAngle == null) __arrowAngle = targetAngle;
+
+  const diff = Math.abs(delta(__arrowAngle, targetAngle));
+  if (diff < DEAD_BAND) return; // no mover por cambios minúsculos
+
+  // suavizado de la aguja (más bajo = más estable)
+  __arrowAngle = smoothAngle(__arrowAngle, targetAngle, 0.12);
+
+  const g = document.getElementById('needle-group');
+  if (g) g.style.transform = `rotate(${__arrowAngle}deg)`;
+
+  // lectura numérica estable
+  const head = (typeof fusedHeading === 'number' && !isNaN(fusedHeading))
+               ? fusedHeading
+               : (typeof headingFiltered === 'number' ? headingFiltered : 0);
+  const deg = Math.round((head % 360 + 360) % 360);
+  const out = document.getElementById('compass-reading');
+  if (out) out.textContent = `${deg}° ${cardinalShort(deg)}`;
+
 }
 
 /* ========= Inicio + SW ========= */
