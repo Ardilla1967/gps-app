@@ -684,7 +684,7 @@ function computeAbsoluteHeading(alpha,beta,gamma){
   const so=(screen.orientation && screen.orientation.angle) || window.orientation || 0;
   return norm(heading + (so||0));
 }
-<script>
+
 // ======= Parámetros del filtro de brújula =======
 const EMA_ALPHA = 0.08;       // suavizado de media circular (más chico = más suave)
 const DEAD_BAND = 1.2;        // grados mínimos para mover aguja
