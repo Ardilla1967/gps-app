@@ -24,6 +24,9 @@ self.addEventListener('install', (e) => {
   );
   self.skipWaiting();
 });
+// en sw.js
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
 
 // ACTIVATE: limpia caches viejos
 self.addEventListener('activate', (e) => {
