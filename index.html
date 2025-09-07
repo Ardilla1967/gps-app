@@ -5,6 +5,14 @@
   <meta charset="UTF-8">
   <title>PuntoYa!</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3282F6">
+
+<!-- íconos (favicon y Apple) -->
+<link rel="icon" href="icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+
   <style>
     :root {
       --primary: #1800ad;
@@ -724,5 +732,17 @@
     const bnav = document.getElementById('btn-activar-nav'); if (bnav) bnav.textContent = textos[lang].activar_nav;
   });
 </script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js', { scope: './' })
+    .catch(console.error);
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js', { scope: './' })
+    .catch(console.error);
+}
+</script>
+
 </body>
 </html>
