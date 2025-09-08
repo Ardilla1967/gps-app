@@ -145,10 +145,16 @@
     </button>
   </div>
 
+  <!-- Segunda fila: reemplazo de Exportar por "Ir a Mapa" (mismo modal) -->
   <div class="grid-buttons">
-    <button class="exportar" onclick="exportarUbicaciones()">
-      <img src="excel-icon.png" alt="Excel" style="height: 1.4em; vertical-align: middle;" />
-      <span id="exportar-txt"></span>
+    <button class="mapa" onclick="abrirModal()">
+      <span style="display:inline-block;vertical-align:middle;width:1.2em;height:1.2em;">
+        <svg viewBox="0 0 24 24" fill="#1874fa" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C7.59 2 4 5.42 4 9.5c0 5.39 6.48 11.88 6.75 12.15.41.41 1.08.41 1.49 0C13.52 21.38 20 14.89 20 9.5 20 5.42 16.41 2 12 2zm0 17.77c-2.34-2.36-6-6.91-6-10.27 0-3.04 2.69-5.5 6-5.5s6 2.46 6 5.5c0 3.36-3.66 7.91-6 10.27z"/>
+          <circle cx="12" cy="9.5" r="2.5" fill="#4285f4"/>
+        </svg>
+      </span>
+      <span id="ir-mapa-txt"></span>
     </button>
     <button class="borrar" onclick="abrirModalBorrar()">
       <img src="basurero-icon.png" alt="Borrar" style="height: 1.4em; margin-right: 6px; vertical-align: middle;" />
@@ -283,7 +289,7 @@
     document.getElementById("nombre").placeholder = textos[lang].placeholder;
     document.getElementById("guardar-txt").innerText = textos[lang].guardar;
     document.getElementById("ver-txt").innerText = textos[lang].ver;
-    document.getElementById("exportar-txt").innerText = textos[lang].exportar;
+    const ex = document.getElementById("exportar-txt"); if (ex) ex.innerText = textos[lang].exportar; // ya no existe el botón, se protege
     document.getElementById("borrar-txt").innerText = textos[lang].borrar;
     document.getElementById("mensaje-status").innerText = textos[lang].status_inicio;
     document.getElementById("modal-title").innerText = textos[lang].modal_titulo;
@@ -302,6 +308,8 @@
     const pmsg = document.getElementById('permiso-msg'); if (pmsg) pmsg.innerText = textos[lang].permiso_msg;
     const pac = document.getElementById('btn-permiso-aceptar'); if (pac) pac.innerText = textos[lang].aceptar;
     const pcc = document.getElementById('btn-permiso-cancelar'); if (pcc) pcc.innerText = textos[lang].btn_cancelar;
+    const ir2 = document.getElementById('ir-mapa-txt'); if (ir2) ir2.innerText = textos[lang].modal_ver; // nuevo botón "Ir a Mapa"
+
     actualizarResumen();
     const busc = document.getElementById('buscador-ubicaciones'); if (busc) { busc.placeholder = textos[lang].buscar; const cont = document.getElementById('sugerencias-ubicaciones'); if (cont) cont.style.display='none'; }
     const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
@@ -347,15 +355,6 @@
   function actualizarResumen() {
     const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
     document.getElementById("lista-resumen").innerHTML = textos[lang].resumen(ubicaciones.length);
-  }
-
-  function exportarUbicaciones() {
-    const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
-    if (ubicaciones.length === 0) return alert(textos[lang].no_hay);
-    let csv = "nombre,fecha,latitud,longitud\n";
-    ubicaciones.forEach(u => { csv += `"${u.nombre}","${u.fecha}","${u.lat}","${u.lon}"\n`; });
-    const blob = new Blob([csv], { type: "text/csv" });
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "ubicaciones.csv"; a.click();
   }
 
   // MODAL BORRAR
