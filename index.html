@@ -54,13 +54,14 @@
     /* ============================================================= */
 
     .mapa { background-color: #d8d513; border: none; color: white; font-weight: bold; }
-    .exportar { background-color: var(--white); border: 2px solid var(--gray); display: flex; align-items: center; justify-content: center; gap: 6px; }
     .borrar { background-color: var(--danger); color: var(--white); }
     .guardado, .guardadas { background-color: var(--white); width: 100%; text-align: center; padding: 12px; border-radius: var(--radius); font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 6px; }
     .guardadas { color: var(--danger); }
 
-    #modal, #modal-borrar, #modal-borrar-seleccion, #modal-sin-nombre, #modal-permiso { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 10; }
-    #modal .modal-content { background: #fff; }
+    /* Modales */
+    #modal-ver, #modal-nav, #modal-borrar, #modal-borrar-seleccion, #modal-sin-nombre, #modal-permiso {
+      display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 10;
+    }
     .modal-content { background: white; border-radius: var(--radius); padding: 20px; text-align: center; width: 90%; max-width: 300px; }
     .modal-content select, .modal-content button, .modal-content input { width: 100%; margin-top: 10px; padding: 10px; font-size: 1em; border-radius: 12px; }
     .modal-content .grouped-buttons { display: flex; flex-direction: column; gap: 9px; margin-top: 10px; }
@@ -68,14 +69,14 @@
     .modal-content button.secondary { background: var(--yellow); color: #222; border: none; font-weight: bold; }
     .modal-content button.cancel { background: #f3f3f3; color: #444; border: none; }
 
-    #btn-ver, #btn-ir-navegacion { background-color: #f1db13; color: #111; border: none; font-weight: bold; border-radius: 12px; padding: 10px; margin-top: 10px; }
-    #btn-ver:hover, #btn-ir-navegacion:hover { background-color: #e4ffa0; }
+    #btn-ver, #btn-ir-punto { background-color: #f1db13; color: #111; border: none; font-weight: bold; border-radius: 12px; padding: 10px; margin-top: 10px; }
+    #btn-ver:hover, #btn-ir-punto:hover { background-color: #e4ffa0; }
 
     /* Sugerencias en modal */
-    #sugerencias-ubicaciones { display:none; max-height:200px; overflow:auto; border:1px solid #e5e7eb; border-radius:10px; background:#fff; margin:6px 0 8px 0; padding:6px; }
-    #sugerencias-ubicaciones .sug-item { padding:8px 10px; border-radius:8px; cursor:pointer; font-size:.95em; display:flex; gap:8px; align-items:center; }
-    #sugerencias-ubicaciones .sug-item:hover{ background:#f6f6f6; }
-    #sugerencias-ubicaciones .sug-empty{ color:#666; font-size:.9em; padding:6px 10px; }
+    .sugerencias-box { display:none; max-height:200px; overflow:auto; border:1px solid #e5e7eb; border-radius:10px; background:#fff; margin:6px 0 8px 0; padding:6px; }
+    .sug-item { padding:8px 10px; border-radius:8px; cursor:pointer; font-size:.95em; display:flex; gap:8px; align-items:center; }
+    .sug-item:hover{ background:#f6f6f6; }
+    .sug-empty{ color:#666; font-size:.9em; padding:6px 10px; }
   </style>
 </head>
 <body>
@@ -125,6 +126,18 @@
 <div class="container">
   <input type="text" id="nombre" placeholder="Nombrar la Actual Ubicación (opcional)" />
   <div class="grid-buttons">
+    <!-- 1) Ver en mapa -> modal con SOLO Ir a Mapa -->
+    <button class="mapa" onclick="abrirModalVer()">
+      <span style="display:inline-block;vertical-align:middle;width:1.2em;height:1.2em;">
+        <svg viewBox="0 0 24 24" fill="#1874fa" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C7.59 2 4 5.42 4 9.5c0 5.39 6.48 11.88 6.75 12.15.41.41 1.08.41 1.49 0C13.52 21.38 20 14.89 20 9.5 20 5.42 16.41 2 12 2zm0 17.77c-2.34-2.36-6-6.91-6-10.27 0-3.04 2.69-5.5 6-5.5s6 2.46 6 5.5c0 3.36-3.66 7.91-6 10.27z"/>
+          <circle cx="12" cy="9.5" r="2.5" fill="#4285f4"/>
+        </svg>
+      </span>
+      <span id="ver-txt"></span>
+    </button>
+
+    <!-- Guardar ubicación -->
     <button id="btn-guardar" class="guardar" onclick="preGuardarUbicacion()">
       <span style="display:inline-block;vertical-align:middle;width:1.2em;height:1.2em;">
         <svg viewBox="0 0 24 24" fill="#1874fa" xmlns="http://www.w3.org/2000/svg">
@@ -134,27 +147,18 @@
       </span>
       <span id="guardar-txt"></span>
     </button>
-    <button class="mapa" onclick="abrirModal()">
-      <span style="display:inline-block;vertical-align:middle;width:1.2em;height:1.2em;">
-        <svg viewBox="0 0 24 24" fill="#1874fa" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2C7.59 2 4 5.42 4 9.5c0 5.39 6.48 11.88 6.75 12.15.41.41 1.08.41 1.49 0C13.52 21.38 20 14.89 20 9.5 20 5.42 16.41 2 12 2zm0 17.77c-2.34-2.36-6-6.91-6-10.27 0-3.04 2.69-5.5 6-5.5s6 2.46 6 5.5c0 3.36-3.66 7.91-6 10.27z"/>
-          <circle cx="12" cy="9.5" r="2.5" fill="#4285f4"/>
-        </svg>
-      </span>
-      <span id="ver-txt"></span>
-    </button>
   </div>
 
-  <!-- Segunda fila: reemplazo de Exportar por "Ir a Mapa" (mismo modal) -->
+  <!-- 2) Navegar a punto -> modal con SOLO Ir a Punto -->
   <div class="grid-buttons">
-    <button class="mapa" onclick="abrirModal()">
+    <button class="mapa" onclick="abrirModalNav()">
       <span style="display:inline-block;vertical-align:middle;width:1.2em;height:1.2em;">
         <svg viewBox="0 0 24 24" fill="#1874fa" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 2C7.59 2 4 5.42 4 9.5c0 5.39 6.48 11.88 6.75 12.15.41.41 1.08.41 1.49 0C13.52 21.38 20 14.89 20 9.5 20 5.42 16.41 2 12 2zm0 17.77c-2.34-2.36-6-6.91-6-10.27 0-3.04 2.69-5.5 6-5.5s6 2.46 6 5.5c0 3.36-3.66 7.91-6 10.27z"/>
           <circle cx="12" cy="9.5" r="2.5" fill="#4285f4"/>
         </svg>
       </span>
-      <span id="ir-mapa-txt"></span>
+      <span id="navegar-txt"></span>
     </button>
     <button class="borrar" onclick="abrirModalBorrar()">
       <img src="basurero-icon.png" alt="Borrar" style="height: 1.4em; margin-right: 6px; vertical-align: middle;" />
@@ -169,16 +173,27 @@
   </div>
 </div>
 
-<!-- Modal Mapa -->
-<div id="modal">
+<!-- Modal VER (solo Ir a Mapa) -->
+<div id="modal-ver">
   <div class="modal-content">
-    <h3 id="modal-title">Elige ubicación a ver en el mapa</h3>
-    <input id="buscador-ubicaciones" type="text" placeholder="" oninput="filtrarModal()" onkeydown="buscarKeydown(event)" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin:8px 0;">
-    <div id="sugerencias-ubicaciones"></div>
-    <select id="selector-ubicaciones"></select>
+    <h3 id="modal-title-ver">Elige ubicación a ver en el mapa</h3>
+    <input id="buscador-ubicaciones-ver" type="text" placeholder="" oninput="filtrarModal('ver')" onkeydown="buscarKeydown('ver', event)" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin:8px 0;">
+    <div id="sugerencias-ubicaciones-ver" class="sugerencias-box"></div>
+    <select id="selector-ubicaciones-ver"></select>
     <button onclick="verSeleccionadaEnMapa()" id="btn-ver">Ir a Mapa</button>
-    <button onclick="iniciarNavegacionSeleccionada()" id="btn-ir-navegacion">Navegar a Punto</button>
-    <button onclick="cerrarModal()" id="btn-cancelar">Cancelar</button>
+    <button onclick="cerrarModalVer()" id="btn-cancelar-ver" class="cancel">Cancelar</button>
+  </div>
+</div>
+
+<!-- Modal NAV (solo Ir a Punto) -->
+<div id="modal-nav">
+  <div class="modal-content">
+    <h3 id="modal-title-nav">Elige ubicación para navegar</h3>
+    <input id="buscador-ubicaciones-nav" type="text" placeholder="" oninput="filtrarModal('nav')" onkeydown="buscarKeydown('nav', event)" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin:8px 0;">
+    <div id="sugerencias-ubicaciones-nav" class="sugerencias-box"></div>
+    <select id="selector-ubicaciones-nav"></select>
+    <button onclick="iniciarNavegacionSeleccionada()" id="btn-ir-punto">Ir a punto</button>
+    <button onclick="cerrarModalNav()" id="btn-cancelar-nav" class="cancel">Cancelar</button>
   </div>
 </div>
 
@@ -234,12 +249,14 @@
       placeholder: "Nombrar la Actual Ubicación (opcional)",
       guardar: "Guardar ubicación",
       ver: "Ver en mapa",
-      exportar: "Exportar a Excel",
+      navegar_boton: "Navegar a punto",
       borrar: "Borrar ubicaciones",
       status_inicio: "Esperando acción...",
       resumen: n => `📍 Mis ubicaciones guardadas: ${n}`,
-      modal_titulo: "Elige ubicación a ver en el mapa",
+      modal_titulo_ver: "Elige ubicación a ver en el mapa",
+      modal_titulo_nav: "Elige ubicación para navegar",
       modal_ver: "Ir a Mapa",
+      modal_ir_punto: "Ir a punto",
       modal_cancelar: "Cancelar",
       guardado: nombre => `✅ Guardado: ${nombre}`,
       no_hay: "No hay ubicaciones",
@@ -263,12 +280,14 @@
       placeholder: "Name Current Location (optional)",
       guardar: "Save location",
       ver: "View on map",
-      exportar: "Export to Excel",
+      navegar_boton: "Navigate to point",
       borrar: "Delete locations",
       status_inicio: "Waiting for action...",
       resumen: n => `📍 Saved locations: ${n}`,
-      modal_titulo: "Select location to view on map",
+      modal_titulo_ver: "Select location to view on map",
+      modal_titulo_nav: "Select location to navigate",
       modal_ver: "Go to Map",
+      modal_ir_punto: "Go to point",
       modal_cancelar: "Cancel",
       guardado: nombre => `✅ Saved: ${nombre}`,
       no_hay: "No locations available",
@@ -289,12 +308,19 @@
     document.getElementById("nombre").placeholder = textos[lang].placeholder;
     document.getElementById("guardar-txt").innerText = textos[lang].guardar;
     document.getElementById("ver-txt").innerText = textos[lang].ver;
-    const ex = document.getElementById("exportar-txt"); if (ex) ex.innerText = textos[lang].exportar; // ya no existe el botón, se protege
+    document.getElementById("navegar-txt").innerText = textos[lang].navegar_boton;
     document.getElementById("borrar-txt").innerText = textos[lang].borrar;
     document.getElementById("mensaje-status").innerText = textos[lang].status_inicio;
-    document.getElementById("modal-title").innerText = textos[lang].modal_titulo;
+
+    // Títulos y botones de cada modal
+    document.getElementById("modal-title-ver").innerText = textos[lang].modal_titulo_ver;
     document.getElementById("btn-ver").innerText = textos[lang].modal_ver;
-    document.getElementById("btn-cancelar").innerText = textos[lang].modal_cancelar;
+    document.getElementById("btn-cancelar-ver").innerText = textos[lang].modal_cancelar;
+
+    document.getElementById("modal-title-nav").innerText = textos[lang].modal_titulo_nav;
+    document.getElementById("btn-ir-punto").innerText = textos[lang].modal_ir_punto;
+    document.getElementById("btn-cancelar-nav").innerText = textos[lang].modal_cancelar;
+
     document.getElementById("modal-borrar-title").innerText = textos[lang].modal_borrar_title;
     document.getElementById("btn-borrar-seleccionar").innerText = textos[lang].btn_seleccionar;
     document.getElementById("btn-borrar-todas").innerText = textos[lang].btn_todas;
@@ -302,16 +328,21 @@
     document.getElementById("modal-borrar-seleccion-title").innerText = textos[lang].modal_borrar_seleccion_title;
     document.getElementById("btn-borrar-una").innerText = textos[lang].btn_borrar_una;
     document.getElementById("btn-borrar-cancelar2").innerText = textos[lang].btn_cancelar;
+
     document.getElementById("mensaje-sin-nombre").innerText = textos[lang].sin_nombre;
     document.getElementById("btn-aceptar-sin-nombre").innerText = textos[lang].aceptar;
     document.getElementById("btn-cancelar-sin-nombre").innerText = textos[lang].btn_cancelar;
+
     const pmsg = document.getElementById('permiso-msg'); if (pmsg) pmsg.innerText = textos[lang].permiso_msg;
     const pac = document.getElementById('btn-permiso-aceptar'); if (pac) pac.innerText = textos[lang].aceptar;
     const pcc = document.getElementById('btn-permiso-cancelar'); if (pcc) pcc.innerText = textos[lang].btn_cancelar;
-    const ir2 = document.getElementById('ir-mapa-txt'); if (ir2) ir2.innerText = textos[lang].modal_ver; // nuevo botón "Ir a Mapa"
 
     actualizarResumen();
-    const busc = document.getElementById('buscador-ubicaciones'); if (busc) { busc.placeholder = textos[lang].buscar; const cont = document.getElementById('sugerencias-ubicaciones'); if (cont) cont.style.display='none'; }
+
+    // Placeholders de buscadores
+    const buscVer = document.getElementById('buscador-ubicaciones-ver'); if (buscVer) { buscVer.placeholder = textos[lang].buscar; ocultarSugerencias('ver'); }
+    const buscNav = document.getElementById('buscador-ubicaciones-nav'); if (buscNav) { buscNav.placeholder = textos[lang].buscar; ocultarSugerencias('nav'); }
+
     const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
     const bnav = document.getElementById('btn-activar-nav'); if (bnav) bnav.textContent = textos[lang].activar_nav;
   }
@@ -346,7 +377,11 @@
       document.getElementById("nombre").value = "";
       document.getElementById("btn-guardar").style.backgroundColor = 'rgb(117,250,97)';
       actualizarResumen();
-      const busc = document.getElementById('buscador-ubicaciones'); if (busc) { busc.placeholder = textos[lang].buscar; const cont = document.getElementById('sugerencias-ubicaciones'); if (cont) cont.style.display='none'; }
+
+      // Refrescar placeholders
+      const buscVer = document.getElementById('buscador-ubicaciones-ver'); if (buscVer) { buscVer.placeholder = textos[lang].buscar; ocultarSugerencias('ver'); }
+      const buscNav = document.getElementById('buscador-ubicaciones-nav'); if (buscNav) { buscNav.placeholder = textos[lang].buscar; ocultarSugerencias('nav'); }
+
       const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
       const bnav = document.getElementById('btn-activar-nav'); if (bnav) bnav.textContent = textos[lang].activar_nav;
     }, function(err) { alert("Error al obtener ubicación: " + err.message); }, { enableHighAccuracy: true, timeout: 15000 });
@@ -375,7 +410,10 @@
     localStorage.setItem("ubicaciones", JSON.stringify(ubicaciones));
     document.getElementById("mensaje-status").innerText = textos[lang].eliminado;
     cerrarModalBorrarSeleccion(); actualizarResumen();
-    const busc = document.getElementById('buscador-ubicaciones'); if (busc) { busc.placeholder = textos[lang].buscar; const cont = document.getElementById('sugerencias-ubicaciones'); if (cont) cont.style.display='none'; }
+
+    const buscVer = document.getElementById('buscador-ubicaciones-ver'); if (buscVer) { buscVer.placeholder = textos[lang].buscar; ocultarSugerencias('ver'); }
+    const buscNav = document.getElementById('buscador-ubicaciones-nav'); if (buscNav) { buscNav.placeholder = textos[lang].buscar; ocultarSugerencias('nav'); }
+
     const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
     const bnav = document.getElementById('btn-activar-nav'); if (bnav) bnav.textContent = textos[lang].activar_nav;
   }
@@ -383,53 +421,78 @@
     if (confirm(textos[lang].confirm)) {
       localStorage.removeItem("ubicaciones"); document.getElementById("mensaje-status").innerText = textos[lang].eliminado;
       cerrarModalBorrar(); actualizarResumen();
-      const busc = document.getElementById('buscador-ubicaciones'); if (busc) { busc.placeholder = textos[lang].buscar; const cont = document.getElementById('sugerencias-ubicaciones'); if (cont) cont.style.display='none'; }
+
+      const buscVer = document.getElementById('buscador-ubicaciones-ver'); if (buscVer) { buscVer.placeholder = textos[lang].buscar; ocultarSugerencias('ver'); }
+      const buscNav = document.getElementById('buscador-ubicaciones-nav'); if (buscNav) { buscNav.placeholder = textos[lang].buscar; ocultarSugerencias('nav'); }
+
       const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
       const bnav = document.getElementById('btn-activar-nav'); if (bnav) bnav.textContent = textos[lang].activar_nav;
     }
   }
 
-  // --- Modal search & options rebuild ---
+  // --- MODALES VER/NAV: utilidades genéricas con sufijo
   let __modalUbicaciones = [];
-  function buildOpcionesModal(filterText) {
-    const selector = document.getElementById("selector-ubicaciones"); selector.innerHTML = "";
-    const placeholder = document.createElement("option"); placeholder.text = (lang === 'es') ? "— Elegir ubicación —" : "— Select location —"; placeholder.disabled = true; placeholder.selected = true; selector.appendChild(placeholder);
-    if (!__modalUbicaciones.length) { const opt = document.createElement("option"); opt.text = textos[lang].no_hay; opt.disabled = true; selector.appendChild(opt); return; }
-    const f = (filterText || "").toLowerCase().trim();
-    for (let i = __modalUbicaciones.length - 1; i >= 0; i--) { const u = __modalUbicaciones[i]; const display = `${u.nombre || (lang==='es'?'(sin nombre)':'(no name)')} — ${u.fecha}`; if (f && !display.toLowerCase().includes(f)) continue; const opt = document.createElement("option"); opt.value = i; opt.text = display; selector.appendChild(opt); }
-  }
-  function filtrarModal() { const q = document.getElementById("buscador-ubicaciones").value; buildOpcionesModal(q); renderSugerencias(q); }
 
-  // --- Sugerencias visuales en el modal ---
-  function renderSugerencias(filterText){
-    const cont = document.getElementById('sugerencias-ubicaciones'); if (!cont) return; cont.innerHTML = '';
+  function abrirModalVer(){
+    __modalUbicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+    const busc = document.getElementById("buscador-ubicaciones-ver"); if (busc) busc.value = "";
+    buildOpcionesModal('ver', ""); renderSugerencias('ver', "");
+    document.getElementById("modal-ver").style.display = "flex";
+  }
+  function cerrarModalVer(){ document.getElementById("modal-ver").style.display = "none"; }
+
+  function abrirModalNav(){
+    __modalUbicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+    const busc = document.getElementById("buscador-ubicaciones-nav"); if (busc) busc.value = "";
+    buildOpcionesModal('nav', ""); renderSugerencias('nav', "");
+    document.getElementById("modal-nav").style.display = "flex";
+  }
+  function cerrarModalNav(){ document.getElementById("modal-nav").style.display = "none"; }
+
+  function buildOpcionesModal(kind, filterText){
+    const sel = document.getElementById(`selector-ubicaciones-${kind}`); sel.innerHTML = "";
+    const placeholder = document.createElement("option"); placeholder.text = (lang === 'es') ? "— Elegir ubicación —" : "— Select location —"; placeholder.disabled = true; placeholder.selected = true; sel.appendChild(placeholder);
+    if (!__modalUbicaciones.length) { const opt = document.createElement("option"); opt.text = textos[lang].no_hay; opt.disabled = true; sel.appendChild(opt); return; }
+    const f = (filterText || "").toLowerCase().trim();
+    for (let i = __modalUbicaciones.length - 1; i >= 0; i--) {
+      const u = __modalUbicaciones[i];
+      const display = `${u.nombre || (lang==='es'?'(sin nombre)':'(no name)')} — ${u.fecha}`;
+      if (f && !display.toLowerCase().includes(f)) continue;
+      const opt = document.createElement("option"); opt.value = i; opt.text = display; sel.appendChild(opt);
+    }
+  }
+
+  function filtrarModal(kind){ const q = document.getElementById(`buscador-ubicaciones-${kind}`).value; buildOpcionesModal(kind, q); renderSugerencias(kind, q); }
+
+  function renderSugerencias(kind, filterText){
+    const cont = document.getElementById(`sugerencias-ubicaciones-${kind}`); if (!cont) return; cont.innerHTML = '';
     const f = (filterText||'').toLowerCase().trim(); let count = 0;
-    for (let i = __modalUbicaciones.length - 1; i >= 0; i--) { const u = __modalUbicaciones[i]; const display = `${u.nombre || (lang==='es'?'(sin nombre)':'(no name)')} — ${u.fecha}`; if (f && !display.toLowerCase().includes(f)) continue; const div = document.createElement('div'); div.className = 'sug-item'; div.dataset.idx = String(i); div.innerText = display; div.onclick = () => seleccionarEnModal(i); cont.appendChild(div); count++; if (count >= 30) break; }
+    for (let i = __modalUbicaciones.length - 1; i >= 0; i--) {
+      const u = __modalUbicaciones[i];
+      const display = `${u.nombre || (lang==='es'?'(sin nombre)':'(no name)')} — ${u.fecha}`;
+      if (f && !display.toLowerCase().includes(f)) continue;
+      const div = document.createElement('div'); div.className = 'sug-item'; div.dataset.idx = String(i); div.innerText = display; div.onclick = () => seleccionarEnModal(kind, i); cont.appendChild(div); count++; if (count >= 30) break;
+    }
     if (count === 0){ const empty = document.createElement('div'); empty.className = 'sug-empty'; empty.innerText = (lang==='es' ? 'Sin resultados' : 'No results'); cont.appendChild(empty); }
     cont.style.display = (filterText && filterText.trim() !== '') ? 'block' : 'none';
   }
-  function seleccionarEnModal(idx){ const selector = document.getElementById('selector-ubicaciones'); const q = document.getElementById('buscador-ubicaciones').value; buildOpcionesModal(q); selector.value = String(idx); const cont = document.getElementById('sugerencias-ubicaciones'); if (cont) cont.style.display = 'none'; }
-  function buscarKeydown(ev){ if (ev.key === 'Enter'){ const first = document.querySelector('#sugerencias-ubicaciones .sug-item'); if (first && first.dataset.idx){ seleccionarEnModal(first.dataset.idx); ev.preventDefault(); } } }
 
-  function abrirModalPermisoOrientacion(){ const el = document.getElementById('modal-permiso'); if (el) el.style.display='flex'; }
-  function cerrarModalPermiso(){ const el = document.getElementById('modal-permiso'); if (el) el.style.display='none'; }
-  function aceptarPermisoOrientacion(){
-    if (typeof DeviceOrientationEvent?.requestPermission === 'function'){
-      DeviceOrientationEvent.requestPermission().then(state=>{
-        if (state==='granted'){ cerrarModalPermiso(); activarOrientacion(); const bnav = document.getElementById("btn-activar-nav"); if (bnav) bnav.style.display = "none"; }
-        else { alert(lang==='es' ? 'Permiso no otorgado.' : 'Permission not granted.'); }
-      }).catch(err=>{ console.error(err); alert(lang==='es' ? 'Error al solicitar permiso.' : 'Error requesting permission.'); });
-    } else { activarOrientacion(); cerrarModalPermiso(); }
+  function seleccionarEnModal(kind, idx){
+    const selector = document.getElementById(`selector-ubicaciones-${kind}`);
+    const q = document.getElementById(`buscador-ubicaciones-${kind}`).value;
+    buildOpcionesModal(kind, q);
+    selector.value = String(idx);
+    ocultarSugerencias(kind);
   }
 
-  // MODAL MAPA
-  function abrirModal() { const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]"); __modalUbicaciones = ubicaciones; const busc = document.getElementById("buscador-ubicaciones"); if (busc) busc.value = ""; buildOpcionesModal(""); renderSugerencias(""); document.getElementById("modal").style.display = "flex"; }
-  function cerrarModal() { document.getElementById("modal").style.display = "none"; }
+  function ocultarSugerencias(kind){ const cont = document.getElementById(`sugerencias-ubicaciones-${kind}`); if (cont) cont.style.display = 'none'; }
+
+  function buscarKeydown(kind, ev){ if (ev.key === 'Enter'){ const first = document.querySelector(`#sugerencias-ubicaciones-${kind} .sug-item`); if (first && first.dataset.idx){ seleccionarEnModal(kind, first.dataset.idx); ev.preventDefault(); } } }
 
   function verSeleccionadaEnMapa() {
-    const idx = document.getElementById("selector-ubicaciones").value; const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+    const idx = document.getElementById("selector-ubicaciones-ver").value; const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
     if (idx === "" || ubicaciones[idx] === undefined) { alert((lang === 'es') ? "Por favor selecciona una ubicación válida." : "Please select a valid location."); return; }
-    const { lat, lon } = ubicaciones[idx]; window.open(`https://maps.google.com/?q=${lat},${lon}`, "_blank"); cerrarModal();
+    const { lat, lon } = ubicaciones[idx]; window.open(`https://maps.google.com/?q=${lat},${lon}`, "_blank"); cerrarModalVer();
   }
 
   // =================== NAVEGACIÓN ===================
@@ -437,7 +500,7 @@
 
   function iniciarNavegacionSeleccionada() {
     llegadaMostrada = false;
-    const idx = document.getElementById("selector-ubicaciones").value; const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
+    const idx = document.getElementById("selector-ubicaciones-nav").value; const ubicaciones = JSON.parse(localStorage.getItem("ubicaciones") || "[]");
     if (idx === "" || ubicaciones[idx] === undefined) { alert((lang === 'es') ? "Por favor selecciona una ubicación válida." : "Please select a valid location."); return; }
     objetivo = ubicaciones[idx];
 
@@ -446,7 +509,7 @@
     const btnStop = document.getElementById("btn-detener"); if (btnStop) btnStop.style.display = "block";
     document.getElementById("compass-target-name").innerText = `Ubicación: ${objetivo.nombre || "(sin nombre)"}`;
 
-    cerrarModal();
+    cerrarModalNav();
 
     if (watcherId) try { navigator.geolocation.clearWatch(watcherId); } catch(e){}
     watcherId = navigator.geolocation.watchPosition(actualizarNavegacion, err => { alert("No se pudo acceder a la geolocalización."); }, { enableHighAccuracy: true });
@@ -542,7 +605,10 @@
   document.addEventListener('DOMContentLoaded', () => {
     aplicarTraduccion();
     document.querySelectorAll('.lang-selector button').forEach(btn => { btn.classList.toggle('selected', btn.dataset.lang === lang); });
-    const busc = document.getElementById('buscador-ubicaciones'); if (busc) { busc.placeholder = textos[lang].buscar; const cont = document.getElementById('sugerencias-ubicaciones'); if (cont) cont.style.display='none'; }
+
+    const buscVer = document.getElementById('buscador-ubicaciones-ver'); if (buscVer) { buscVer.placeholder = textos[lang].buscar; ocultarSugerencias('ver'); }
+    const buscNav = document.getElementById('buscador-ubicaciones-nav'); if (buscNav) { buscNav.placeholder = textos[lang].buscar; ocultarSugerencias('nav'); }
+
     const bstop = document.getElementById('btn-detener'); if (bstop) bstop.textContent = textos[lang].detener;
     const bnav = document.getElementById('btn-activar-nav'); if (bnav) bnav.textContent = textos[lang].activar_nav;
   });
